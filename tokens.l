@@ -36,6 +36,13 @@ void print_tokens(){
     }
 }
 
+/*
+ * (((#e|#i)?(#b)?)|((#b)?(#e|#i)?))(\+|-)?[01]+
+ * (((#e|#i)?(#o)?)|((#o)?(#e|#i)?))(\+|-)?[0-7]+
+ * (((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+
+ * (((#e|#i)?(#x)?)|((#x)?(#e|#i)?))(\+|-)?[0-9a-fA-F]+
+ */
+
 %}
 
 vector              #\(
@@ -49,7 +56,10 @@ lp                  \(
 rp                  \)
 character           #\\.
 string              \"[^\"\\]*\"
-number              [+|-]*[0-9]+
+b_integer            (((#e|#i)?#b)|(#b(#e|#i)?))(\+|-)?[01]+
+o_integer            (((#e|#i)?#o)|(#o(#e|#i)?))(\+|-)?[0-7]+
+d_integer            (((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+
+x_integer            (((#e|#i)?#x)|(#x(#e|#i)?))(\+|-)?[0-9a-fA-F]+
 boolean             #t|#f
 identifier          [a-zA-Z!$%&*/:<=>?^_~][a-zA-Z!$%&*/:<=>?^_~0-9+-@]*|\+|-|\.\.\.
 comment             ;.*
@@ -105,9 +115,24 @@ whitespace          [ \n\t\r\v\f]+
     printf("identifier: %s\n",yytext);
 }
 
-{number} {
-    append_token(make_token(NUMBER,yytext));
-    printf("number: %s\n",yytext);
+{b_integer} {
+    append_token(make_token(INTEGER,yytext));
+    printf("b_integer: %s\n",yytext);
+}
+
+{o_integer} {
+    append_token(make_token(INTEGER,yytext));
+    printf("o_integer: %s\n",yytext);
+}
+
+{d_integer} {
+    append_token(make_token(INTEGER,yytext));
+    printf("d_integer: %s\n",yytext);
+}
+
+{x_integer} {
+    append_token(make_token(INTEGER,yytext));
+    printf("x_integer: %s\n",yytext);
 }
 
 {lp} {

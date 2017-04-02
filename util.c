@@ -6,7 +6,12 @@ void error(char* info){
     printf("error: %s\n",info);
     exit(1);
 }
-
+/*
+ * (((#e|#i)?#b)|(#b(#e|#i)?))(\+|-)?[01]+
+ * (((#e|#i)?#o)|(#o(#e|#i)?))(\+|-)?[0-7]+
+ * (((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+
+ * (((#e|#i)?#x)|(#x(#e|#i)?))(\+|-)?[0-9a-fA-F]+
+ */
 int string_to_number(char* s){
     return atoi(s);
 }

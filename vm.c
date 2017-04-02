@@ -209,7 +209,7 @@ Object* newObject(VM* vm, ObjectType type) {
 
 // Creates a new int object and pushes it onto the stack.
 void pushInt(VM* vm, int intValue) {
-    Object* object = newObject(vm, OBJ_NUMBER);
+    Object* object = newObject(vm, OBJ_INTEGER);
     object->value.i = intValue;
 
     push(vm, object);
@@ -232,7 +232,7 @@ Object* pushPair(VM* vm) {
 void printObject(Object* obj){
     if(obj != NULL){
         switch(obj->type){
-            case OBJ_NUMBER:
+            case OBJ_INTEGER:
                 printf("%d",obj->value.i);
                 break;
             case OBJ_STRING:
@@ -256,8 +256,8 @@ void printObject(Object* obj){
     }
 }
 
-Object* newNumberObject(VM* vm,int i){
-    Object* obj = newObject(vm,OBJ_NUMBER);
+Object* newIntegerObject(VM* vm,int i){
+    Object* obj = newObject(vm,OBJ_INTEGER);
     obj->value.i = i;
     return obj;
 }

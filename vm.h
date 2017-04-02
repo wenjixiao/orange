@@ -12,11 +12,11 @@
 #define CADDR(obj)      CAR(CDDR(obj)) /* third */
 #define CADDDR(obj)     CAR(CDDDR(obj)) /* fourth */
 
-#define NUMBER(obj)     obj->value.i
+#define INTEGER(obj)     obj->value.i
 
 typedef enum {
     OBJ_VOID,
-    OBJ_NUMBER,
+    OBJ_INTEGER,
     OBJ_SYMBOL,
     OBJ_STRING,
     OBJ_BOOLEAN,
@@ -70,7 +70,7 @@ int list_length(Object* list);
 void list_append_obj(VM* vm,Object* list,Object* obj);
 int is_list_empty(Object* list);
 Object* list_last_obj(Object* list);
-Object* newNumberObject(VM* vm,int i);
+Object* newIntegerObject(VM* vm,int i);
 Object* newSymbolObject(VM* vm,char* symname);
 Object* newStringObject(VM* vm,char* s);
 Object* newBooleanObject(VM* vm,int i);

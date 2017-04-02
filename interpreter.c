@@ -43,13 +43,13 @@ Object* make_symbol(VM* vm,const char* symname){
 
 void init_symbols(VM* vm){
     Symbols = make_empty_list(vm);
-    true = make_symbol(vm,"true");
-    false = make_symbol(vm,"false");
     primitive = make_symbol(vm,"primitive");
     procedure = make_symbol(vm,"procedure");
     for(int i=0;i<NUM_KEYWORDS;i++){
         keywords[i] = make_symbol(vm,keyword_names[i]);
     }
+
+    push(vm,Symbols); // can't be gc now
 }
 
 /* env is a list of frame.
@@ -142,8 +142,8 @@ Object* obj_read(VM* vm,Token* tokens_head){
                 break;
             default:
                 switch(token->type){
-                    case NUMBER:
-                        obj = newNumberObject(vm,string_to_number(token->text));
+                    case INTEGER:
+                        obj = newIntegerObject(vm,string_to_number(token->text));
                         break;
                     case BOOLEAN:
                         if(strcmp(token->text,"#t")==0){
@@ -249,7 +249,7 @@ int is_list_tagged(Object* list,Object* symbol){
 }
 //enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 Object* obj_eval(VM* vm,Object* obj,Object* env){
-    if(obj->type == OBJ_NUMBER || obj->type == OBJ_STRING 
+    if(obj->type == OBJ_INTEGER || obj->type == OBJ_STRING 
             || obj->type == OBJ_CHARACTER || obj->type == OBJ_BOOLEAN){
         //self evaluating
         return obj;
@@ -281,7 +281,9 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
         push(vm,env);
         push(vm,obj);
         Object* proc = obj_eval(vm,get_operator(obj),env);
+        push(vm,proc);
         Object* args = list_of_values(vm,get_operands(obj),env);
+        pop(vm);
         pop(vm);
         pop(vm);
         return obj_apply(vm,proc,args);
