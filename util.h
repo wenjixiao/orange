@@ -1,3 +1,2 @@
-void error(char* info);
-int string_to_number(char* s);
+int string_to_int(char* s);
 char *heap_string(const char *s);

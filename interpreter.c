@@ -62,7 +62,8 @@ Object* extend_env(VM* vm,Object* vars,Object* vals,Object* base_env){
     if(list_length(vars) == list_length(vals)){
         return cons(vm,make_frame(vm,vars,vals),base_env);
     }else{
-        error("vars and vals lengh not match!");
+        perror("vars and vals lengh not match!");
+        exit(1);
     }
 }
 
@@ -89,7 +90,8 @@ Object* lookup_variable_value(Object* var,Object* env){
         if(val != NULL) return val;
         pair = CDR(pair);
     }
-    error("unbound variable!");
+    perror("unbound variable!");
+    exit(1);
 }
 
 /* func -> (list 'primitive func) */
@@ -143,7 +145,7 @@ Object* obj_read(VM* vm,Token* tokens_head){
             default:
                 switch(token->type){
                     case INTEGER:
-                        obj = newIntegerObject(vm,string_to_number(token->text));
+                        obj = newIntegerObject(vm,string_to_int(token->text));
                         break;
                     case BOOLEAN:
                         if(strcmp(token->text,"#t")==0){
@@ -151,7 +153,8 @@ Object* obj_read(VM* vm,Token* tokens_head){
                         }else if(strcmp(token->text,"#f")==0){
                             obj = newBooleanObject(vm,0);
                         }else{
-                            error("boolean literal error!");
+                            perror("boolean literal error!");
+                            exit(1);
                         }
                         break;
                     case STRING:
@@ -161,7 +164,8 @@ Object* obj_read(VM* vm,Token* tokens_head){
                         obj = make_symbol(vm,token->text);
                         break;
                     default:
-                        error("the data type not supported now!");
+                        perror("the data type not supported now!");
+                        exit(1);
                 }
 
                 list_append_obj(vm,parent,obj);
@@ -288,7 +292,8 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
         pop(vm);
         return obj_apply(vm,proc,args);
     }else{
-        error("unknow expression type");
+        perror("unknow expression type");
+        exit(1);
     }
 }
 
@@ -330,7 +335,8 @@ Object* obj_apply(VM* vm,Object* procedure,Object* arguments){
         Object* myenv = get_procedure_env(procedure);
         return eval_sequence(vm,myprocedure,extend_env(vm,myparameters,arguments,myenv));
     }else{
-        error("unknown procedure type!");
+        perror("unknown procedure type!");
+        exit(1);
     }
 }
 

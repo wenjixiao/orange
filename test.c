@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
 #include <math.h>
 #include <ctype.h>
+
+#include "util.h"
 
 /* char -> int 
  * '0' 48 '9' 57
@@ -108,18 +111,45 @@ void int2str(char* dest,int i,int base){
     strcpy(dest,buf+index);
 }
 
-int string_to_int(char* s){
-    /*
-    char* b_pattern = "(((#e|#i)?#b)|(#b(#e|#i)?))(\+|-)?[01]+";   
-    char* o_pattern = "(((#e|#i)?#o)|(#o(#e|#i)?))(\+|-)?[0-7]+";   
-    char* d_pattern = "(((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+";   
-    char* x_pattern = "(((#e|#i)?#x)|(#x(#e|#i)?))(\+|-)?[0-9a-fA-F]+";   
-    */
-    return atoi(s);
+int test_regex(){
+    char* b_pattern = "(((#e|#i)?#b)|(#b(#e|#i)?))(\\+|-)?[01]+";   
+    char* o_pattern = "(((#e|#i)?#o)|(#o(#e|#i)?))(\\+|-)?[0-7]+";   
+    char* d_pattern = "(((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\\+|-)?[0-9]+";   
+    char* x_pattern = "(((#e|#i)?#x)|(#x(#e|#i)?))(\\+|-)?[0-9a-fA-F]+";   
+    char* buf = "hello#b111000";
+    regex_t preg;
+    const size_t nmatch = 2;
+    regmatch_t pmatch[nmatch];
+    if(regcomp(&preg,b_pattern,REG_EXTENDED) != 0){
+        perror("regcomp");
+        exit(1);
+    }
+    int status,i;
+    status = regexec(&preg,buf,nmatch,pmatch,0);
+    if(status == REG_NOMATCH){
+        //no match
+        printf("no match\n");
+    }
+    if(status == 0){
+        //match
+        printf("match!\n");
+        printf("so=%d,eo=%d\n",pmatch[0].rm_so,pmatch[0].rm_eo);
+        for(int i=pmatch[0].rm_so;i<pmatch[0].rm_eo;i++){
+            printf("%c",buf[i]);
+        }
+        printf("\n");
+    }
+    regfree(&preg);
 }
 
-char *heap_string(const char *s){
-    char *str = (char *)malloc(strlen(s)+1);
-    strcpy(str,s);
-    return str;
+int main(){
+    char my[20];
+    int2str(my,-255,16);
+    printf("==%s\n",my);
+    //test_regex();
+    /*
+    char c;
+    c = int2c(7,8);
+    printf("%c\n",c);
+    */
 }

@@ -1,7 +1,7 @@
 ops = -g -std=gnu99
 
 
-interpreter : interpreter.o procedures.o tokens.o vm.o util.o
+interpreter : interpreter.o procedures.o tokens.o vm.o util.o -lm
 	gcc -o $@ $^
 
 interpreter.o : interpreter.c token.h util.h vm.h
@@ -21,6 +21,9 @@ tokens.o : tokens.c token.h util.h
 
 tokens.c : tokens.l
 	flex -o tokens.c tokens.l 
+
+test : test.c
+	gcc -std=gnu99 test.c -o test -lm
 
 run: interpreter
 	./interpreter example.scm

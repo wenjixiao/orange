@@ -37,6 +37,8 @@ void print_tokens(){
 }
 
 /*
+ * keyword quote|lambda|if|set!|begin|cond|and|or|case|
+ * let|let*|letrec|do|delay|quasiquote|else|=>|define|unquote|unquote-splicing
  * (((#e|#i)?(#b)?)|((#b)?(#e|#i)?))(\+|-)?[01]+
  * (((#e|#i)?(#o)?)|((#o)?(#e|#i)?))(\+|-)?[0-7]+
  * (((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+
@@ -51,7 +53,6 @@ quasiquote          `
 comma               ,
 unquote_splicing    ,@
 dot                 \.
-keyword             quote|lambda|if|set!|begin|cond|and|or|case|let|let*|letrec|do|delay|quasiquote|else|=>|define|unquote|unquote-splicing
 lp                  \(
 rp                  \)
 character           #\\.
@@ -105,11 +106,6 @@ whitespace          [ \n\t\r\v\f]+
     printf("vector: %s\n",yytext);
 }
 
-{keyword} {
-    append_token(make_token(IDENTIFIER,yytext));
-    printf("keyword: %s\n",yytext);
-}
-
 {identifier} {
     append_token(make_token(IDENTIFIER,yytext));
     printf("identifier: %s\n",yytext);
@@ -148,6 +144,7 @@ whitespace          [ \n\t\r\v\f]+
 {comment} {
     printf("comment: %s\n",yytext);
 }
+
 {whitespace} {
     //printf("whitespace: %s\n",yytext);
 }
