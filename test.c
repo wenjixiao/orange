@@ -40,23 +40,11 @@ int str2int(char* s,unsigned int base){
     size_t len = strlen(s);
     char* p = s;
 
-    int flag; /* flag=0 no prefix,flag=1 prefix=+,flag=-1 prefix=- */
-    if(p[0] == '+'){
-        flag = 1;
-    }else if(p[0] == '-'){
-        flag = -1;
-    }else{
-        flag = 0;
-    }
-
     int v=0;
     unsigned int myexp=0;
-    int num_index = flag == 0? 0 : 1;
-    for(int i=len-1;i>=num_index;i--){
+    for(int i=len-1;i>=0;i--){
         v += c2int(p[i],base) * pow(base,myexp++);
     }
-
-    if(flag < 0) v *= -1;
     return v;
 }
 /* 0->9=48->57
@@ -97,7 +85,6 @@ void int2str(char* dest,int i,int base){
     buf[19] = '\0';
     int index = 19;
     int num=i,n;
-    num = i<0? -1*i : i;
     char c;
     while(num != 0){
         n = num % base;
@@ -105,48 +92,49 @@ void int2str(char* dest,int i,int base){
         buf[--index] = c;
         num = (num - n) / base;
     }
-    if(i<0){
-        buf[--index]='-';
-    }
     strcpy(dest,buf+index);
 }
 
 int test_regex(){
-    char* b_pattern = "(((#e|#i)?#b)|(#b(#e|#i)?))(\\+|-)?[01]+";   
-    char* o_pattern = "(((#e|#i)?#o)|(#o(#e|#i)?))(\\+|-)?[0-7]+";   
-    char* d_pattern = "(((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\\+|-)?[0-9]+";   
-    char* x_pattern = "(((#e|#i)?#x)|(#x(#e|#i)?))(\\+|-)?[0-9a-fA-F]+";   
-    char* buf = "hello#b111000";
+    //char* b_pattern = "(((#e|#i)?#b)|(#b(#e|#i)?))((\\+|-)?[01]+)";   
+    //char* b_pattern = "(\\+|-)?[01]+";
+    //char* o_pattern = "(((#e|#i)?#o)|(#o(#e|#i)?))(\\+|-)?[0-7]+";   
+    //char* d_pattern = "(((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\\+|-)?[0-9]+";   
+    //char* x_pattern = "(((#e|#i)?#x)|(#x(#e|#i)?))(\\+|-)?[0-9a-fA-F]+";   
+    char* pattern1 = "(#e|#i)?#b((\\+|-)?[01]+)";
+    char* pattern2 = "#b(#e|#i)?((\\+|-)?[01]+)";
+    char* b_pattern = "((#e|#i)?#b)|(#b(#e|#i)?)(\\+|-)?([01]+)";   
+    char* buf = "dog dog #b+1010 have 244 yearold 99 bb";
+    //char* buf = "hello#b111000";
     regex_t preg;
-    const size_t nmatch = 2;
+    const size_t nmatch = 7;
     regmatch_t pmatch[nmatch];
     if(regcomp(&preg,b_pattern,REG_EXTENDED) != 0){
         perror("regcomp");
         exit(1);
     }
-    int status,i;
-    status = regexec(&preg,buf,nmatch,pmatch,0);
-    if(status == REG_NOMATCH){
-        //no match
-        printf("no match\n");
-    }
-    if(status == 0){
-        //match
-        printf("match!\n");
-        printf("so=%d,eo=%d\n",pmatch[0].rm_so,pmatch[0].rm_eo);
-        for(int i=pmatch[0].rm_so;i<pmatch[0].rm_eo;i++){
-            printf("%c",buf[i]);
+    char* p = buf;
+    while(regexec(&preg,p,nmatch,pmatch,0) != REG_NOMATCH){
+        printf("p=%s\n",p);
+        for(int i=0;i<nmatch;i++){
+            printf("i=%d,so=%d,eo=%d\n",i,pmatch[i].rm_so,pmatch[i].rm_eo);
+            for(int j=pmatch[i].rm_so;j<pmatch[i].rm_eo;j++){
+                printf("%c",p[j]);
+            }
+            printf("\n");
         }
-        printf("\n");
+        p += pmatch[0].rm_eo;
     }
     regfree(&preg);
 }
 
 int main(){
+    /*
     char my[20];
     int2str(my,-255,16);
     printf("==%s\n",my);
-    //test_regex();
+    */
+    test_regex();
     /*
     char c;
     c = int2c(7,8);

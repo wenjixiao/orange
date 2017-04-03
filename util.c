@@ -3,6 +3,8 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#include <regex.h>
+
 
 /* char -> int 
  * '0' 48 '9' 57
@@ -37,23 +39,11 @@ int str2int(char* s,unsigned int base){
     size_t len = strlen(s);
     char* p = s;
 
-    int flag; /* flag=0 no prefix,flag=1 prefix=+,flag=-1 prefix=- */
-    if(p[0] == '+'){
-        flag = 1;
-    }else if(p[0] == '-'){
-        flag = -1;
-    }else{
-        flag = 0;
-    }
-
     int v=0;
     unsigned int myexp=0;
-    int num_index = flag == 0? 0 : 1;
-    for(int i=len-1;i>=num_index;i--){
+    for(int i=len-1;i>=0;i--){
         v += c2int(p[i],base) * pow(base,myexp++);
     }
-
-    if(flag < 0) v *= -1;
     return v;
 }
 /* 0->9=48->57
@@ -94,7 +84,6 @@ void int2str(char* dest,int i,int base){
     buf[19] = '\0';
     int index = 19;
     int num=i,n;
-    num = i<0? -1*i : i;
     char c;
     while(num != 0){
         n = num % base;
@@ -102,20 +91,57 @@ void int2str(char* dest,int i,int base){
         buf[--index] = c;
         num = (num - n) / base;
     }
-    if(i<0){
-        buf[--index]='-';
-    }
     strcpy(dest,buf+index);
 }
 
-int string_to_int(char* s){
-    /*
-    char* b_pattern = "(((#e|#i)?#b)|(#b(#e|#i)?))(\+|-)?[01]+";   
-    char* o_pattern = "(((#e|#i)?#o)|(#o(#e|#i)?))(\+|-)?[0-7]+";   
-    char* d_pattern = "(((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+";   
-    char* x_pattern = "(((#e|#i)?#x)|(#x(#e|#i)?))(\+|-)?[0-9a-fA-F]+";   
-    */
-    return atoi(s);
+int string_to_int(char* s,int radix){
+    regex_t preg;
+    const size_t nmatch = 3;
+    regmatch_t pmatch[nmatch];
+
+    char* pattern=NULL;
+    char* p = s;
+    int v=0;
+    char buf[20];
+
+    switch(radix){
+        case 2:
+            pattern = "(\\+|-)?([01]+)";
+            break;
+        case 8:
+            pattern = "(\\+|-)?([0-7]+)";
+            break;
+        case 10:
+            pattern = "(\\+|-)?([0-9]+)";
+            break;
+        case 16:
+            pattern = "(\\+|-)?([0-9a-fA-F]+)";
+            break;
+    }
+
+    if(regcomp(&preg,pattern,REG_EXTENDED) != 0){
+        perror("regex compile error!");
+        exit(1);
+    }
+
+    if(regexec(&preg,p,nmatch,pmatch,0) != REG_NOMATCH){
+        // nums
+        int i=0;
+        for(int j=pmatch[2].rm_so;j<pmatch[2].rm_eo;j++){
+            buf[i++] = p[j];
+        }
+        buf[i] = '\0';
+        v = str2int(buf,radix);
+        // +|-
+        if(pmatch[1].rm_so != -1){
+            if(p[pmatch[1].rm_so] == '-')
+                v *= -1;
+        }
+    }else{
+        perror("can't happen!");
+        exit(1);
+    }
+    return v;
 }
 
 char *heap_string(const char *s){

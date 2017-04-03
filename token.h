@@ -1,4 +1,4 @@
-enum token_type {INTEGER,IDENTIFIER,BOOLEAN,STRING,LP,RP};
+enum token_type {INTEGER2,INTEGER8,INTEGER10,INTEGER16,IDENTIFIER,BOOLEAN,STRING,LP,RP};
 
 typedef struct token {
     enum token_type type;

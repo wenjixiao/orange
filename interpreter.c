@@ -144,8 +144,17 @@ Object* obj_read(VM* vm,Token* tokens_head){
                 break;
             default:
                 switch(token->type){
-                    case INTEGER:
-                        obj = newIntegerObject(vm,string_to_int(token->text));
+                    case INTEGER2:
+                        obj = newIntegerObject(vm,string_to_int(token->text,2));
+                        break;
+                    case INTEGER8:
+                        obj = newIntegerObject(vm,string_to_int(token->text,8));
+                        break;
+                    case INTEGER10:
+                        obj = newIntegerObject(vm,string_to_int(token->text,10));
+                        break;
+                    case INTEGER16:
+                        obj = newIntegerObject(vm,string_to_int(token->text,16));
                         break;
                     case BOOLEAN:
                         if(strcmp(token->text,"#t")==0){
