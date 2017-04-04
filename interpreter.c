@@ -15,8 +15,6 @@ const char* keyword_names[] = {"quote","set!","define","if","lambda","begin","co
 
 Object* keywords[NUM_KEYWORDS];
 
-Object *true,*false,*primitive,*procedure;
-
 /*
  * find or generate a symbol
  * maybe the symbol table should depends on env,
@@ -43,8 +41,6 @@ Object* make_symbol(VM* vm,const char* symname){
 
 void init_symbols(VM* vm){
     Symbols = make_empty_list(vm);
-    primitive = make_symbol(vm,"primitive");
-    procedure = make_symbol(vm,"procedure");
     for(int i=0;i<NUM_KEYWORDS;i++){
         keywords[i] = make_symbol(vm,keyword_names[i]);
     }
@@ -82,6 +78,25 @@ Object* scan_in_frame(Object* frame,Object* var){
     return NULL;
 }
 
+void define_variable(VM* vm,Object* var,Object* val,Object* env){
+    Object* first_frame = CAR(env);
+    Object* var_pair = CAR(first_frame); //vars list
+    Object* val_pair = CDR(first_frame); //vals list
+
+    while(var_pair != NULL){
+        if(var == CAR(var_pair)){
+            //found
+            CAR(val_pair) = val;
+            return;
+        }
+        var_pair = CDR(var_pair);
+        val_pair = CDR(val_pair);
+    }
+    //not found,add new binding
+    CAR(var_pair) = var;
+    CAR(val_pair) = val;
+}
+
 Object* lookup_variable_value(Object* var,Object* env){
     Object *pair = env;
     Object *val;
@@ -97,7 +112,7 @@ Object* lookup_variable_value(Object* var,Object* env){
 /* func -> (list 'primitive func) */
 Object* make_primitive_procedure(VM* vm,Object* primitive_procedure){
     Object* list = make_empty_list(vm);
-    list_append_obj(vm,list,primitive);
+    list_append_obj(vm,list,make_symbol(vm,"primitive"));
     list_append_obj(vm,list,primitive_procedure);
     return list;
 }
@@ -116,6 +131,7 @@ Object* init_env(VM* vm){
 
     add_primitive_procedure(vm,vars,vals,"+",primitive_add);
     add_primitive_procedure(vm,vars,vals,"-",primitive_sub);
+    add_primitive_procedure(vm,vars,vals,">",primitive_gt);
 
     Object* empty_env = make_empty_list(vm);
     return extend_env(vm,vars,vals,empty_env);
@@ -188,6 +204,40 @@ Object* obj_read(VM* vm,Token* tokens_head){
 Object* obj_eval(VM* vm,Object* obj,Object* env);
 Object* obj_apply(VM* vm,Object* obj,Object* params);
 
+Object* make_lambda(VM* vm,Object* parameters,Object* body){
+    Object* list = make_empty_list(vm);
+    list_append_obj(vm,list,make_symbol(vm,"lambda"));
+    list_append_obj(vm,list,parameters);
+    list_append_obj(vm,list,body);
+    return list;
+}
+
+Object* get_definition_variable(Object* obj){
+    if(CADR(obj)->type == OBJ_SYMBOL){
+        return CADR(obj);
+    }else{
+        return CAADR(obj);
+    }
+}
+
+Object* get_definition_value(VM* vm,Object* obj){
+    if(CADR(obj)->type == OBJ_SYMBOL){
+        return CADDR(obj);
+    }else{
+        return make_lambda(vm,CDADR(obj),CDDR(obj));
+    }
+}
+
+
+void define_eval(VM* vm,Object* obj,Object* env){
+    push(vm,env);
+    push(vm,obj);
+    Object* val = obj_eval(vm,get_definition_value(vm,obj),env);
+    pop(vm);
+    pop(vm);
+    define_variable(vm,get_definition_variable(obj),val,env);
+}
+
 Object* get_if_predicate(Object* obj){ return CADR(obj); }
 
 Object* get_if_consequent(Object* obj){ return CADDR(obj); }
@@ -244,7 +294,7 @@ Object* get_lambda_body(Object* obj){ return CDDR(obj); }
 
 Object* make_procedure(VM* vm,Object* params,Object* body,Object* env){
     Object* list = make_empty_list(vm);
-    list_append_obj(vm,list,procedure);
+    list_append_obj(vm,list,make_symbol(vm,"procedure"));
     list_append_obj(vm,list,params);
     list_append_obj(vm,list,body);
     list_append_obj(vm,list,env);
@@ -285,6 +335,7 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
         //set
     }else if(is_list_tagged(obj,keywords[KWD_DEFINE])){
         //define
+        define_eval(vm,obj,env);
     }else if(is_list_tagged(obj,keywords[KWD_BEGIN])){
         //begin
     }else if(is_list_tagged(obj,keywords[KWD_COND])){
@@ -306,8 +357,8 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
     }
 }
 
-int is_primitive_procedure(Object* obj){ return CAR(obj) == primitive; }
-int is_compound_procedure(Object* obj){ return CAR(obj) == procedure; }
+int is_primitive_procedure(VM* vm,Object* obj){ return CAR(obj) == make_symbol(vm,"primitive"); }
+int is_compound_procedure(VM* vm,Object* obj){ return CAR(obj) == make_symbol(vm,"procedure"); }
 
 Object* get_procedure_body(Object* obj){ return CADDR(obj); }
 Object* get_procedure_parameters(Object* obj){ return CADR(obj); }
@@ -336,9 +387,9 @@ Object* apply_primitive_procedure(VM* vm,Object* obj,Object* args){
 }
 
 Object* obj_apply(VM* vm,Object* procedure,Object* arguments){
-    if(is_primitive_procedure(procedure)){
+    if(is_primitive_procedure(vm,procedure)){
         return apply_primitive_procedure(vm,procedure,arguments);
-    }else if(is_compound_procedure(procedure)){
+    }else if(is_compound_procedure(vm,procedure)){
         Object* myprocedure = get_procedure_body(procedure);
         Object* myparameters = get_procedure_parameters(procedure);
         Object* myenv = get_procedure_env(procedure);

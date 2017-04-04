@@ -12,6 +12,9 @@
 #define CADDR(obj)      CAR(CDDR(obj)) /* third */
 #define CADDDR(obj)     CAR(CDDDR(obj)) /* fourth */
 
+#define CAADR(obj)       CAR(CAR(CDR(obj)))
+#define CDADR(obj)       CDR(CAR(CDR(obj)))
+
 #define INTEGER(obj)     obj->value.i
 
 typedef enum {
