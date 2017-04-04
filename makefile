@@ -1,10 +1,10 @@
 ops = -g -std=gnu99
 
 
-interpreter : interpreter.o procedures.o tokens.o vm.o util.o -lm
+interpreter : interpreter.o procedures.o parser.o vm.o util.o -lm
 	gcc -o $@ $^
 
-interpreter.o : interpreter.c token.h util.h vm.h
+interpreter.o : interpreter.c util.h vm.h parser.h
 	gcc $(ops) -c $<
 
 procedures.o : procedures.c procedures.h vm.h
@@ -16,11 +16,11 @@ vm.o : vm.c vm.h
 util.o : util.c util.h
 	gcc $(ops) -c $<
 
-tokens.o : tokens.c token.h util.h
+parser.o : parser.c vm.h util.h
 	gcc $(ops) -c $<
 
-tokens.c : tokens.l
-	flex -o tokens.c tokens.l 
+parser.c : parser.l
+	flex -o parser.c parser.l 
 #--------------------------------------
 #--------------------------------------
 test : test.c

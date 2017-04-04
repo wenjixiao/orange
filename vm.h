@@ -67,14 +67,21 @@ void pushInt(VM* vm, int intValue);
 Object* pushPair(VM* vm);
 void printObject(Object* obj);
 
+extern Object *Nil,*True,*False,*Void;
+
 Object* cons(VM* vm,Object* car,Object* cdr);
-Object* make_empty_list(VM* vm);
-int list_length(Object* list);
-void list_append_obj(VM* vm,Object* list,Object* obj);
-int is_list_empty(Object* list);
-Object* list_last_obj(Object* list);
+int length(Object* list);
+Object* append(VM* vm,Object* list,Object* obj);
+Object* last(Object* list);
+
 Object* newIntegerObject(VM* vm,int i);
 Object* newSymbolObject(VM* vm,char* symname);
 Object* newStringObject(VM* vm,char* s);
-Object* newBooleanObject(VM* vm,int i);
 Object* newPrimitiveProcedure(VM* vm,Object* (*primitive)());
+
+
+Object* list1(VM* vm,Object* obj);
+Object* list2(VM* vm,Object* obj1,Object* obj2);
+Object* list3(VM* vm,Object* obj1,Object* obj2,Object* obj3);
+Object* list4(VM* vm,Object* obj1,Object* obj2,Object* obj3,Object* obj4);
+

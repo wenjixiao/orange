@@ -2,18 +2,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "token.h"
 #include "util.h"
 #include "vm.h"
+#include "parser.h"
 #include "procedures.h"
 
-Object* Symbols; /* global symbol table */
 
 enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 
-const char* keyword_names[] = {"quote","set!","define","if","lambda","begin","cond"};
+const char* Keyword_names[] = {"quote","set!","define","if","lambda","begin","cond"};
 
-Object* keywords[NUM_KEYWORDS];
+Object* Keywords[NUM_KEYWORDS]; // keyword symbol in vm
+
+/* global symbols */
+Object* Symbols; /* global symbol table */
+Object* Primitive; //symbol object for primitive procedure
+Object* Procedure;
+Object* Lparen;
+Object* Rparen;
+/* global consts */
+Object* Nil; // '()
+Object* True;
+Object* False;
+Object* Void;
+/* global list for gc */
+Object* Consts; // as a root for gc mark
+
+VM* vm;
 
 /*
  * find or generate a symbol
@@ -24,8 +39,8 @@ Object* keywords[NUM_KEYWORDS];
 Object* make_symbol(VM* vm,const char* symname){
     Object* obj;
     Object* pair = Symbols;
-    if(!is_list_empty(Symbols)){
-        while(pair != NULL){
+    if(Symbols != Nil){
+        while(pair != Nil){
             obj= CAR(pair);
             if(strcmp(obj->value.s,symname) == 0){
                 return obj;
@@ -35,19 +50,34 @@ Object* make_symbol(VM* vm,const char* symname){
     }
     //not found 
     Object* newObj = newSymbolObject(vm,heap_string(symname));
-    list_append_obj(vm,Symbols,newObj);
+    Symbols = append(vm,Symbols,newObj);
     return newObj;
 }
 
-void init_symbols(VM* vm){
-    Symbols = make_empty_list(vm);
+void init_consts(VM* vm){
+    /* basic objects */
+    Nil = newObject(vm,OBJ_PAIR);
+    CAR(Nil) = NULL;
+    CDR(Nil) = NULL;
+    True = newObject(vm,OBJ_BOOLEAN);
+    True->value.i = 1;
+    False = newObject(vm,OBJ_BOOLEAN);
+    False->value.i = 0;
+    Void = newObject(vm,OBJ_VOID);
+    /* symbols */
+    Symbols = Nil;
     for(int i=0;i<NUM_KEYWORDS;i++){
-        keywords[i] = make_symbol(vm,keyword_names[i]);
+        Keywords[i] = make_symbol(vm,Keyword_names[i]);
     }
-
-    push(vm,Symbols); // can't be gc now
+    Primitive = make_symbol(vm,"primitive");
+    Procedure = make_symbol(vm,"procedure");
+    Lparen = make_symbol(vm,"(");
+    Rparen = make_symbol(vm,")");
+    /* add them to global_const_list */
+    Consts = Nil;
+    Consts = list4(vm,Nil,True,False,Void);
+    Consts = cons(vm,Symbols,Consts);
 }
-
 /* env is a list of frame.
  * Frame is a pair,not list */
 Object* make_frame(VM* vm,Object* vars,Object* vals){
@@ -55,14 +85,14 @@ Object* make_frame(VM* vm,Object* vars,Object* vals){
 }
 
 Object* extend_env(VM* vm,Object* vars,Object* vals,Object* base_env){
-    if(list_length(vars) == list_length(vals)){
+    if(length(vars) == length(vals)){
         return cons(vm,make_frame(vm,vars,vals),base_env);
     }else{
         perror("vars and vals lengh not match!");
         exit(1);
     }
 }
-
+/*
 Object* scan_in_frame(Object* frame,Object* var){
     Object* frame_var;
     Object* vars = CAR(frame);
@@ -77,7 +107,8 @@ Object* scan_in_frame(Object* frame,Object* var){
     //not found
     return NULL;
 }
-
+*/
+/* no return: so,can't be embed in other exps */
 void define_variable(VM* vm,Object* var,Object* val,Object* env){
     Object* first_frame = CAR(env);
     Object* var_pair = CAR(first_frame); //vars list
@@ -96,7 +127,88 @@ void define_variable(VM* vm,Object* var,Object* val,Object* env){
     CAR(var_pair) = var;
     CAR(val_pair) = val;
 }
-
+/* return *void* object */
+Object* set_variable_value(VM* vm,Object* var,Object* val,Object* env){
+    Object* frame_list = env; //frame list
+    Object* myframe_pair;
+    Object* var_list; //variables list
+    Object* val_list; //values list
+    Object* myvar;
+    Object* myval;
+    while(frame_list != Nil){
+        myframe_pair = CAR(frame_list); //the frame we get!
+        var_list = CAR(myframe_pair); //list of vars
+        val_list = CDR(myframe_pair); //list of vals
+        while(var_list != Nil){
+            myvar = CAR(var_list); //the var we get!
+            if(myvar == var){
+                CAR(val_list) = val;
+                return Void;
+            }
+            var_list = CDR(var_list); //next var
+            val_list = CDR(val_list); //next val
+        }
+        frame_list = CDR(frame_list); //next frame
+    }
+    //not found
+    perror("unbound variable---SET!");
+    exit(1);
+}
+/*
+ * env is a list of frame
+ * frame is a pair of vals and vals
+ * vars is a list of symbol
+ * vals is a list of Object
+ * */
+/*
+void hehe(VM* vm,Object* var,Object* val,Object* env){
+    Object* frame_list = env; //frame list
+    Object* myframe_pair;
+    Object* var_list; //variables list
+    Object* val_list; //values list
+    Object* myvar;
+    Object* myval;
+    while(frame_list != Nil){
+        myframe_pair = CAR(frame_list); //the frame we get!
+        var_list = CAR(myframe_pair); //list of vars
+        val_list = CDR(myframe_pair); //list of vals
+        while(var_list != Nil){
+            myvar = CAR(var_list); //the var we get!
+            myval = CAR(val_list); //the val we get!
+            var_list = CDR(var_list); //next var
+            val_list = CDR(val_list); //next val
+        }
+        frame_list = CDR(frame_list); //next frame
+    }
+}
+*/
+Object* lookup_variable_value(Object* var,Object* env){
+    Object* frame_list = env; //frame list
+    Object* myframe_pair;
+    Object* var_list; //variables list
+    Object* val_list; //values list
+    Object* myvar;
+    Object* myval;
+    while(frame_list != Nil){
+        myframe_pair = CAR(frame_list); //the frame we get!
+        var_list = CAR(myframe_pair); //list of vars
+        val_list = CDR(myframe_pair); //list of vals
+        while(var_list != Nil){
+            myvar = CAR(var_list); //the var we get!
+            if(myvar == var){
+                myval = CAR(val_list); //the val we get!
+                return myval;
+            }
+            var_list = CDR(var_list); //next var
+            val_list = CDR(val_list); //next val
+        }
+        frame_list = CDR(frame_list); //next frame
+    }
+    //not found
+    perror("unbound variable---lookup!");
+    exit(1);
+}
+/*
 Object* lookup_variable_value(Object* var,Object* env){
     Object *pair = env;
     Object *val;
@@ -108,108 +220,116 @@ Object* lookup_variable_value(Object* var,Object* env){
     perror("unbound variable!");
     exit(1);
 }
-
+*/
 /* func -> (list 'primitive func) */
 Object* make_primitive_procedure(VM* vm,Object* primitive_procedure){
-    Object* list = make_empty_list(vm);
-    list_append_obj(vm,list,make_symbol(vm,"primitive"));
-    list_append_obj(vm,list,primitive_procedure);
-    return list;
+    return list2(vm,Primitive,primitive_procedure);
 }
 
-void add_primitive_procedure(VM* vm,Object* vars,Object* vals,char* symname,Object* (*func)()){
+void add_primitive_procedure(VM* vm,Object* frame,char* symname,Object* (*func)()){
     Object* sym_obj = make_symbol(vm,symname);
     Object* primitive_procedure = newPrimitiveProcedure(vm,func);
     Object* func_list = make_primitive_procedure(vm,primitive_procedure);
-    list_append_obj(vm,vars,sym_obj);
-    list_append_obj(vm,vals,func_list);
+    
+    CAR(frame) = cons(vm,sym_obj,CAR(frame));
+    CDR(frame) = cons(vm,func_list,CDR(frame));
 }
-
+/* the beginning env */
 Object* init_env(VM* vm){
-    Object* vars = make_empty_list(vm);
-    Object* vals = make_empty_list(vm);
+    Object* frame = cons(vm,Nil,Nil);
 
-    add_primitive_procedure(vm,vars,vals,"+",primitive_add);
-    add_primitive_procedure(vm,vars,vals,"-",primitive_sub);
-    add_primitive_procedure(vm,vars,vals,">",primitive_gt);
+    add_primitive_procedure(vm,frame,"+",primitive_add);
+    add_primitive_procedure(vm,frame,"-",primitive_sub);
+    add_primitive_procedure(vm,frame,">",primitive_gt);
 
-    Object* empty_env = make_empty_list(vm);
-    return extend_env(vm,vars,vals,empty_env);
+    return cons(vm,frame,Nil);
 }
+
+/*
+Object* get_object_from_token(VM* vm,Token* token){
+    Object* obj;
+    switch(token->type){
+        case INTEGER2:
+            obj = newIntegerObject(vm,string_to_int(token->text,2));
+            break;
+        case INTEGER8:
+            obj = newIntegerObject(vm,string_to_int(token->text,8));
+            break;
+        case INTEGER10:
+            obj = newIntegerObject(vm,string_to_int(token->text,10));
+            break;
+        case INTEGER16:
+            obj = newIntegerObject(vm,string_to_int(token->text,16));
+            break;
+        case BOOLEAN:
+            if(strcmp(token->text,"#t")==0){
+                obj = True;
+            }else if(strcmp(token->text,"#f")==0){
+                obj = False;
+            }else{
+                perror("boolean literal error!");
+                exit(1);
+            }
+            break;
+        case STRING:
+            obj = newStringObject(vm,heap_string(token->text));
+            break;
+        case IDENTIFIER:
+            obj = make_symbol(vm,token->text);
+            break;
+        default:
+            perror("the data type not supported now!");
+            exit(1);
+    }
+    return obj;
+}
+*/
 /* 
- * read tokens, return a pointer to Object. 
- * just like scheme's read procedure.
- * If not a list,just return the last obj! 
- *
- * normally,the obj we return is a list.
+ * use stack to reverse the sequence of elements!
  */
+/*
 Object* obj_read(VM* vm,Token* tokens_head){
     Token* token = tokens_head;
-    Object *parent=make_empty_list(vm),*obj=NULL;
+    Token* out_token;
+    Object* parent = Nil;
+    Object* obj;
+    int in_stack_count = 0;
 
     while(token != NULL){
-        switch(token->type){
-            case LP:
-                obj = make_empty_list(vm);
-                list_append_obj(vm,parent,obj);
-                push(vm,parent);
-                parent = obj;
-                break;
-            case RP:
-                parent = pop(vm);
-                break;
-            default:
-                switch(token->type){
-                    case INTEGER2:
-                        obj = newIntegerObject(vm,string_to_int(token->text,2));
-                        break;
-                    case INTEGER8:
-                        obj = newIntegerObject(vm,string_to_int(token->text,8));
-                        break;
-                    case INTEGER10:
-                        obj = newIntegerObject(vm,string_to_int(token->text,10));
-                        break;
-                    case INTEGER16:
-                        obj = newIntegerObject(vm,string_to_int(token->text,16));
-                        break;
-                    case BOOLEAN:
-                        if(strcmp(token->text,"#t")==0){
-                            obj = newBooleanObject(vm,1);
-                        }else if(strcmp(token->text,"#f")==0){
-                            obj = newBooleanObject(vm,0);
-                        }else{
-                            perror("boolean literal error!");
-                            exit(1);
-                        }
-                        break;
-                    case STRING:
-                        obj = newStringObject(vm,heap_string(token->text));
-                        break;
-                    case IDENTIFIER:
-                        obj = make_symbol(vm,token->text);
-                        break;
-                    default:
-                        perror("the data type not supported now!");
-                        exit(1);
+        if(token->type == RP){
+            while(in_stack_count > 0){
+                out_token = pop(vm),in_stack_count--;
+                if(out_token->type == LP){
+                    push(vm,parent);
+                    in_stack_count++;
+                    break;
+                }else{
+                    obj = get_object_from_token(vm,out_token);
+                    parent = cons(vm,obj,parent);
                 }
-
-                list_append_obj(vm,parent,obj);
+            }
+        }else{
+            push(vm,token),in_stack_count++;
         }
-
         token=token->next;
     }
-    return list_last_obj(parent);
+    
+    return pop(vm);
 }
-
+*/
 Object* obj_eval(VM* vm,Object* obj,Object* env);
 Object* obj_apply(VM* vm,Object* obj,Object* params);
 
+Object* get_assignment_variable(Object* obj){ return CADR(obj); }
+
+Object* get_assignment_value(Object* obj){ return CADDR(obj); }
+
+Object* set_eval(VM* vm,Object* obj,Object* env){
+
+}
+
 Object* make_lambda(VM* vm,Object* parameters,Object* body){
-    Object* list = make_empty_list(vm);
-    list_append_obj(vm,list,make_symbol(vm,"lambda"));
-    list_append_obj(vm,list,parameters);
-    list_append_obj(vm,list,body);
-    return list;
+    return list3(vm,Keywords[KWD_LAMBDA],parameters,body);
 }
 
 Object* get_definition_variable(Object* obj){
@@ -246,7 +366,7 @@ Object* get_if_alternative(VM* vm,Object* obj){
     if(CDDDR(obj) != NULL){
         return CADDDR(obj);
     }else{
-        return newBooleanObject(vm,0);
+        return False;
     }
 }
 
@@ -275,14 +395,14 @@ Object* get_operands(Object* list){ return CDR(list); }
 
 Object* list_of_values(VM* vm,Object* operands,Object* env){
     Object* operand_obj;
-    Object* args = make_empty_list(vm);
+    Object* args = Nil;
 
     Object* pair = operands;
 
     push(vm,args); // save
-    while(pair != NULL){
+    while(pair != Nil){
         operand_obj = obj_eval(vm,CAR(pair),env);
-        list_append_obj(vm,args,operand_obj);
+        args = append(vm,args,operand_obj);
         pair = CDR(pair);
     }
     pop(vm); //restore
@@ -293,12 +413,7 @@ Object* get_lambda_params(Object* obj){ return CADR(obj); }
 Object* get_lambda_body(Object* obj){ return CDDR(obj); }
 
 Object* make_procedure(VM* vm,Object* params,Object* body,Object* env){
-    Object* list = make_empty_list(vm);
-    list_append_obj(vm,list,make_symbol(vm,"procedure"));
-    list_append_obj(vm,list,params);
-    list_append_obj(vm,list,body);
-    list_append_obj(vm,list,env);
-    return list;
+    return list4(vm,Procedure,params,body,env);
 }
 
 int is_list_tagged(Object* list,Object* symbol){
@@ -319,26 +434,27 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
     }else if(obj->type == OBJ_SYMBOL){
         //variable
         return lookup_variable_value(obj,env);
-    }else if(is_list_tagged(obj,keywords[KWD_LAMBDA])){
+    }else if(is_list_tagged(obj,Keywords[KWD_LAMBDA])){
         //lambda
             push(vm,env);
             push(vm,obj);
             Object* myobj = make_procedure(vm,get_lambda_params(obj),get_lambda_body(obj),env);
             pop(vm);
             pop(vm);
-    }else if(is_list_tagged(obj,keywords[KWD_IF])){
+    }else if(is_list_tagged(obj,Keywords[KWD_IF])){
         //if
         return if_eval(vm,obj,env);
-    }else if(is_list_tagged(obj,keywords[KWD_QUOTE])){
+    }else if(is_list_tagged(obj,Keywords[KWD_QUOTE])){
         //quote
-    }else if(is_list_tagged(obj,keywords[KWD_SET])){
+    }else if(is_list_tagged(obj,Keywords[KWD_SET])){
         //set
-    }else if(is_list_tagged(obj,keywords[KWD_DEFINE])){
+        return set_eval(vm,obj,env);
+    }else if(is_list_tagged(obj,Keywords[KWD_DEFINE])){
         //define
         define_eval(vm,obj,env);
-    }else if(is_list_tagged(obj,keywords[KWD_BEGIN])){
+    }else if(is_list_tagged(obj,Keywords[KWD_BEGIN])){
         //begin
-    }else if(is_list_tagged(obj,keywords[KWD_COND])){
+    }else if(is_list_tagged(obj,Keywords[KWD_COND])){
         //cond
     }else if(obj->type == OBJ_PAIR){
         //applications
@@ -357,8 +473,8 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
     }
 }
 
-int is_primitive_procedure(VM* vm,Object* obj){ return CAR(obj) == make_symbol(vm,"primitive"); }
-int is_compound_procedure(VM* vm,Object* obj){ return CAR(obj) == make_symbol(vm,"procedure"); }
+int is_primitive_procedure(VM* vm,Object* obj){ return CAR(obj) == Primitive; }
+int is_compound_procedure(VM* vm,Object* obj){ return CAR(obj) == Procedure; }
 
 Object* get_procedure_body(Object* obj){ return CADDR(obj); }
 Object* get_procedure_parameters(Object* obj){ return CADR(obj); }
@@ -407,22 +523,19 @@ int main(int argc,char** argv){
     else
         f = stdin;
 
-    /* gen tokens */
-    Token *tokens_head = (Token *) get_tokens(f);
-    /* show tokens */
-    print_tokens();
-
-    VM* vm = newVM();
-    init_symbols(vm);
-    Object* global_env = init_env(vm);
-    Object* o = obj_read(vm,tokens_head);
+    vm = newVM();
+    init_consts(vm);
+    //Object* global_env = init_env(vm);
+    obj_read(f);
+    Object* o = pop(vm);
+    /*
     Object* r = obj_eval(vm,o,global_env);
     printObject(o);
     printf("\n>>>");
-    printObject(r);
+    */
+    printObject(o);
     printf("\n");
 
-    destroy_tokens(tokens_head);
     freeVM(vm);
 
     fclose(f);

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "vm.h"
+extern Object* Consts;
 
 // Creates a new VM with an empty stack and an empty (but allocated) heap.
 VM* newVM() {
@@ -54,8 +55,15 @@ void mark(Object* object) {
 // The mark phase of garbage collection. Starting at the roots (in this case,
 // just the stack), recursively walks all reachable objects in the VM.
 void markAll(VM* vm) {
+    /* mark stack */
     for (int i = 0; i < vm->stackSize; i++) {
         mark(vm->stack[i]);
+    }
+    /* mark consts */
+    Object* p = Consts;
+    while(p != Nil){
+        mark(CAR(p));
+        p = CDR(p);
     }
 }
 
@@ -230,7 +238,7 @@ Object* pushPair(VM* vm) {
 }
 
 void printObject(Object* obj){
-    if(obj != NULL){
+    if(obj != Nil){
         switch(obj->type){
             case OBJ_INTEGER:
                 printf("%d",obj->value.i);
@@ -280,69 +288,59 @@ Object* newStringObject(VM* vm,char* s){
     return obj;
 }
 
-Object* newBooleanObject(VM* vm,int i){
-    Object* obj = newObject(vm,OBJ_BOOLEAN);
-    obj->value.i = i;
-    return obj;
-}
-
-int is_list_empty(Object* list){
-    return list->type == OBJ_PAIR && CAR(list) == NULL && CDR(list) == NULL;
-}
-
 Object* cons(VM* vm,Object* car,Object* cdr){
-    if(cdr != NULL){
-        if(is_list_empty(cdr)){
-            CAR(cdr)  = car;
-            return cdr;
-        }
-    }
-    // cdr == NULL
     Object* pair = newObject(vm,OBJ_PAIR);
     CAR(pair) = car;
     CDR(pair) = cdr;
     return pair;
 }
 
-/* it's a empty pair too! */
-Object* make_empty_list(VM* vm){
-    Object* pair = newObject(vm,OBJ_PAIR);
-    CAR(pair) = NULL;
-    CDR(pair) = NULL;
-    return pair;
+Object* list1(VM* vm,Object* obj){
+    return cons(vm,obj,Nil);
 }
 
-int list_length(Object* list){
+Object* list2(VM* vm,Object* obj1,Object* obj2){
+    return cons(vm,obj1,cons(vm,obj2,Nil));
+}
+
+Object* list3(VM* vm,Object* obj1,Object* obj2,Object* obj3){
+    return cons(vm,obj1,list2(vm,obj2,obj3));
+}
+
+Object* list4(VM* vm,Object* obj1,Object* obj2,Object* obj3,Object* obj4){
+    return cons(vm,obj1,list3(vm,obj2,obj3,obj4));
+}
+
+int length(Object* list){
     int count=0;
     Object* pair = list;
-    while(pair != NULL){
+    while(pair != Nil){
         count++;
         pair = CDR(pair);
     }
     return count;
 }
 
-
-Object* list_last_pair(Object* list){
+Object* last_pair(Object* list){
     Object* p = list;
-    while(CDR(p) != NULL){
+    while(CDR(p) != Nil){
         p = CDR(p);
     }
     return p;
 }
 
-Object* list_last_obj(Object* list){
-    Object* pair = list_last_pair(list);
+Object* last(Object* list){
+    Object* pair = last_pair(list);
     return CAR(pair);
 }
 
-void list_append_obj(VM* vm,Object* list,Object* obj){
-    if(is_list_empty(list)) {
-        CAR(list) = obj;
-        return;
+Object* append(VM* vm,Object* list,Object* obj){
+    if(list == Nil){
+        return cons(vm,obj,Nil);
+    }else{
+        Object* lastPair = last_pair(list);
+        CDR(lastPair) = cons(vm,obj,Nil);
+        return list;
     }
-    /* it's the last pair */
-    Object* lastPair = list_last_pair(list);
-    CDR(lastPair) = cons(vm,obj,NULL);
 }
 

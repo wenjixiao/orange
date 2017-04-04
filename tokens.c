@@ -515,47 +515,25 @@ char *yytext;
 #include "string.h"
 
 #include "util.h"
-#include "token.h"
+#include "vm.h"
 
-Token *head=NULL,*tail=NULL;
+extern VM* vm;
+extern Object* Nil; // '()
+extern Object* True;
+extern Object* False;
+extern Object* Lparen;
 
-Token * make_token(enum token_type type,char *text){
-    Token *t;
-    t = (Token *) malloc(sizeof(Token));
-    t->next = NULL;
-    t->text = heap_string(text);
-    t->type = type;
-    return t;
-}
-
-void append_token(Token *t){
-    if(head==NULL){
-        head=t;
-        tail=t;
-    }else{
-        tail->next=t;
-        tail=t;
-    }
-}
-
-void print_tokens(){
-    Token *p=head;
-    while(p!=NULL){
-        printf("type=%d,text=%s\n",p->type,p->text);
-        p=p->next;
-    }
-}
+Object* obj;
+Object* parent; // the list readed in
+Object* out_obj;
+int in_stack_count = 0;
 
 /*
  * keyword quote|lambda|if|set!|begin|cond|and|or|case|
  * let|let*|letrec|do|delay|quasiquote|else|=>|define|unquote|unquote-splicing
- * (((#e|#i)?(#b)?)|((#b)?(#e|#i)?))(\+|-)?[01]+
- * (((#e|#i)?(#o)?)|((#o)?(#e|#i)?))(\+|-)?[0-7]+
- * (((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+
- * (((#e|#i)?(#x)?)|((#x)?(#e|#i)?))(\+|-)?[0-9a-fA-F]+
  */
 
-#line 559 "tokens.c"
+#line 537 "tokens.c"
 
 #define INITIAL 0
 
@@ -742,10 +720,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 69 "tokens.l"
+#line 47 "tokens.l"
 
 
-#line 749 "tokens.c"
+#line 727 "tokens.c"
 
 	if ( !(yy_init) )
 		{
@@ -830,7 +808,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 71 "tokens.l"
+#line 49 "tokens.l"
 {
     printf("character: %s\n",yytext);
 }
@@ -838,121 +816,145 @@ YY_RULE_SETUP
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 75 "tokens.l"
+#line 53 "tokens.l"
 {
-    append_token(make_token(STRING,yytext));
+    obj = newStringObject(vm,heap_string(yytext));
+    push(vm,obj),in_stack_count++;
     printf("string: %s\n",yytext);
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 80 "tokens.l"
+#line 59 "tokens.l"
 {
     printf("dot: %s\n",yytext);
 }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 84 "tokens.l"
+#line 63 "tokens.l"
 {
-    append_token(make_token(BOOLEAN,yytext));
+    if(strcmp(yytext,"#t")==0){
+        obj = True;
+    }else if(strcmp(yytext,"#f")==0){
+        obj = False;
+    }else{
+        perror("boolean literal error!");
+        exit(1);
+    }
+    push(vm,obj),in_stack_count++;
     printf("boolean: %s\n",yytext);
 }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 89 "tokens.l"
+#line 76 "tokens.l"
 {
     printf("unquote_splicing: %s\n",yytext);
 }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 93 "tokens.l"
+#line 80 "tokens.l"
 {
     printf("comma: %s\n",yytext);
 }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 97 "tokens.l"
+#line 84 "tokens.l"
 {
     printf("quasiquote: %s\n",yytext);
 }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 101 "tokens.l"
+#line 88 "tokens.l"
 {
     printf("quote: %s\n",yytext);
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 105 "tokens.l"
+#line 92 "tokens.l"
 {
     printf("vector: %s\n",yytext);
 }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 109 "tokens.l"
+#line 96 "tokens.l"
 {
-    append_token(make_token(IDENTIFIER,yytext));
+    obj = newSymbolObject(vm,heap_string(yytext));
+    push(vm,obj),in_stack_count++;
     printf("identifier: %s\n",yytext);
 }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 114 "tokens.l"
+#line 102 "tokens.l"
 {
-    append_token(make_token(INTEGER2,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,2));
+    push(vm,obj),in_stack_count++;
     printf("b_integer: %s\n",yytext);
 }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 119 "tokens.l"
+#line 108 "tokens.l"
 {
-    append_token(make_token(INTEGER8,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,8));
+    push(vm,obj),in_stack_count++;
     printf("o_integer: %s\n",yytext);
 }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 124 "tokens.l"
+#line 114 "tokens.l"
 {
-    append_token(make_token(INTEGER10,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,10));
+    push(vm,obj),in_stack_count++;
     printf("d_integer: %s\n",yytext);
 }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 129 "tokens.l"
+#line 120 "tokens.l"
 {
-    append_token(make_token(INTEGER16,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,16));
+    push(vm,obj),in_stack_count++;
     printf("x_integer: %s\n",yytext);
 }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 134 "tokens.l"
+#line 126 "tokens.l"
 {
-    append_token(make_token(LP,yytext));
+    obj = newSymbolObject(vm,"(");
+    push(vm,obj),in_stack_count++;
     printf("lp: %s\n",yytext);
 }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 139 "tokens.l"
+#line 132 "tokens.l"
 {
-    append_token(make_token(RP,yytext));
+    while(in_stack_count > 0){
+        out_obj = pop(vm),in_stack_count--;
+        if(out_obj == Lparen){
+            push(vm,parent);
+            in_stack_count++;
+            break;
+        }else{
+            parent = cons(vm,out_obj,parent);
+        }
+    }
     printf("rp: %s\n",yytext);
 }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 144 "tokens.l"
+#line 146 "tokens.l"
 {
     printf("comment: %s\n",yytext);
 }
@@ -960,24 +962,24 @@ YY_RULE_SETUP
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 148 "tokens.l"
+#line 150 "tokens.l"
 {
     //printf("whitespace: %s\n",yytext);
 }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 152 "tokens.l"
+#line 154 "tokens.l"
 {
     printf("other_things: %s\n",yytext);
 } 
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 156 "tokens.l"
+#line 158 "tokens.l"
 ECHO;
 	YY_BREAK
-#line 981 "tokens.c"
+#line 983 "tokens.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1975,24 +1977,13 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 156 "tokens.l"
+#line 158 "tokens.l"
 
 
 
-Token *get_tokens(FILE *f){
+extern void obj_read(FILE *f){
     yyin = f;
     yylex();
-    return head;
-}
-
-void destroy_tokens(Token* head){
-    Token *p=head,*q=NULL;
-    while(p != NULL) {
-        free(p->text);
-        q = p;
-        p=p->next;
-        free(q);   
-    }
 }
 
 int yywrap(){

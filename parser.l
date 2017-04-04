@@ -5,44 +5,22 @@
 #include "string.h"
 
 #include "util.h"
-#include "token.h"
+#include "vm.h"
 
-Token *head=NULL,*tail=NULL;
+extern VM* vm;
+extern Object* Nil; // '()
+extern Object* True;
+extern Object* False;
+extern Object* Lparen;
 
-Token * make_token(enum token_type type,char *text){
-    Token *t;
-    t = (Token *) malloc(sizeof(Token));
-    t->next = NULL;
-    t->text = heap_string(text);
-    t->type = type;
-    return t;
-}
-
-void append_token(Token *t){
-    if(head==NULL){
-        head=t;
-        tail=t;
-    }else{
-        tail->next=t;
-        tail=t;
-    }
-}
-
-void print_tokens(){
-    Token *p=head;
-    while(p!=NULL){
-        printf("type=%d,text=%s\n",p->type,p->text);
-        p=p->next;
-    }
-}
+static Object* obj;
+static Object* parent; // the list readed in
+static Object* out_obj;
+static int in_stack_count = 0;
 
 /*
  * keyword quote|lambda|if|set!|begin|cond|and|or|case|
  * let|let*|letrec|do|delay|quasiquote|else|=>|define|unquote|unquote-splicing
- * (((#e|#i)?(#b)?)|((#b)?(#e|#i)?))(\+|-)?[01]+
- * (((#e|#i)?(#o)?)|((#o)?(#e|#i)?))(\+|-)?[0-7]+
- * (((#e|#i)?(#d)?)|((#d)?(#e|#i)?))(\+|-)?[0-9]+
- * (((#e|#i)?(#x)?)|((#x)?(#e|#i)?))(\+|-)?[0-9a-fA-F]+
  */
 
 %}
@@ -73,7 +51,8 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {string} {
-    append_token(make_token(STRING,yytext));
+    obj = newStringObject(vm,heap_string(yytext));
+    push(vm,obj),in_stack_count++;
     printf("string: %s\n",yytext);
 }
 
@@ -82,7 +61,15 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {boolean} {
-    append_token(make_token(BOOLEAN,yytext));
+    if(strcmp(yytext,"#t")==0){
+        obj = True;
+    }else if(strcmp(yytext,"#f")==0){
+        obj = False;
+    }else{
+        perror("boolean literal error!");
+        exit(1);
+    }
+    push(vm,obj),in_stack_count++;
     printf("boolean: %s\n",yytext);
 }
 
@@ -107,37 +94,52 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {identifier} {
-    append_token(make_token(IDENTIFIER,yytext));
+    obj = newSymbolObject(vm,heap_string(yytext));
+    push(vm,obj),in_stack_count++;
     printf("identifier: %s\n",yytext);
 }
 
 {b_integer} {
-    append_token(make_token(INTEGER2,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,2));
+    push(vm,obj),in_stack_count++;
     printf("b_integer: %s\n",yytext);
 }
 
 {o_integer} {
-    append_token(make_token(INTEGER8,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,8));
+    push(vm,obj),in_stack_count++;
     printf("o_integer: %s\n",yytext);
 }
 
 {d_integer} {
-    append_token(make_token(INTEGER10,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,10));
+    push(vm,obj),in_stack_count++;
     printf("d_integer: %s\n",yytext);
 }
 
 {x_integer} {
-    append_token(make_token(INTEGER16,yytext));
+    obj = newIntegerObject(vm,string_to_int(yytext,16));
+    push(vm,obj),in_stack_count++;
     printf("x_integer: %s\n",yytext);
 }
 
 {lp} {
-    append_token(make_token(LP,yytext));
+    push(vm,Lparen),in_stack_count++;
     printf("lp: %s\n",yytext);
 }
 
 {rp} {
-    append_token(make_token(RP,yytext));
+    while(in_stack_count > 0){
+        out_obj = pop(vm),in_stack_count--;
+        if(out_obj == Lparen){
+            push(vm,parent);
+            parent = Nil;
+            in_stack_count++;
+            break;
+        }else{
+            parent = cons(vm,out_obj,parent);
+        }
+    }
     printf("rp: %s\n",yytext);
 }
 
@@ -155,20 +157,10 @@ whitespace          [ \n\t\r\v\f]+
 
 %%
 
-Token *get_tokens(FILE *f){
+void obj_read(FILE *f){
+    parent = Nil;
     yyin = f;
     yylex();
-    return head;
-}
-
-void destroy_tokens(Token* head){
-    Token *p=head,*q=NULL;
-    while(p != NULL) {
-        free(p->text);
-        q = p;
-        p=p->next;
-        free(q);   
-    }
 }
 
 int yywrap(){

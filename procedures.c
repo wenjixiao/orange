@@ -7,7 +7,7 @@
 /* + */
 Object* primitive_add(VM* vm,Object* params){
     int result = 0;
-    if(is_list_empty(params)) return newIntegerObject(vm,result);
+    if(params == Nil) return newIntegerObject(vm,result);
 
     Object* pair=params;
     while(pair != NULL){
@@ -19,11 +19,11 @@ Object* primitive_add(VM* vm,Object* params){
 }
 /* - */
 Object* primitive_sub(VM* vm,Object* params){
-    if(is_list_empty(params)) {
+    if(params == Nil) {
         perror("params can't be empty!");
         exit(1);
     }
-    if(list_length(params) == 1){
+    if(length(params) == 1){
         int v = INTEGER(CAR(params));
         return newIntegerObject(vm,0-v);
     }
@@ -45,10 +45,10 @@ Object* primitive_gt(VM* vm,Object* params){
         if(left_obj->value.i > right_obj->value.i){
             pair = CDR(pair);
         }else{
-            return newBooleanObject(vm,0);
+            return False;
         }
     }
-    return newBooleanObject(vm,1);
+    return True;
 }
 /* < */
 Object* primitive_lt(VM* vm,Object* params){
