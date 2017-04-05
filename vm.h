@@ -16,6 +16,7 @@
 #define CDADR(obj)       CDR(CAR(CDR(obj)))
 
 #define INTEGER(obj)     obj->value.i
+#define STR(obj)         obj->value.s
 
 typedef enum {
     OBJ_VOID,

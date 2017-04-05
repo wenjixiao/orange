@@ -295,6 +295,8 @@ Object* cons(VM* vm,Object* car,Object* cdr){
     return pair;
 }
 
+Object* is_empty(Object* list){ return list == Nil ? True : False; }
+
 Object* list1(VM* vm,Object* obj){
     return cons(vm,obj,Nil);
 }
@@ -341,6 +343,48 @@ Object* append(VM* vm,Object* list,Object* obj){
         Object* lastPair = last_pair(list);
         CDR(lastPair) = cons(vm,obj,Nil);
         return list;
+    }
+}
+
+Object* filter(VM* vm,Object* list,Object* (*func)()){
+    Object *p = list;
+    Object *from_obj,*to_obj;
+    Object *result_list = Nil;
+    while(p != Nil){
+        from_obj = CAR(p);
+        to_obj = (*func)(from_obj);
+        if(to_obj == True){
+            result_list = append(vm,result_list,to_obj);
+        }
+        p = CDR(p);
+    }
+    return result_list;
+}
+
+Object* map(VM* vm,Object* list,Object* (*func)()){
+    Object *p = list;
+    Object *from_obj,*to_obj;
+    Object *result_list = Nil;
+    while(p != Nil){
+        from_obj = CAR(p);
+        to_obj = (*func)(from_obj);
+        result_list = append(vm,result_list,to_obj);
+        p = CDR(p);
+    }
+    return result_list;
+}
+
+Object* eqv(Object* obj1,Object* obj2){
+    if(obj1->type == obj2->type){
+        switch(obj1->type){
+            case OBJ_SYMBOL:
+                return strcmp(STR(obj1),STR(obj2)) == 0 ? True : False; 
+            case OBJ_INTEGER:
+                return INTEGER(obj1) == INTEGER(obj2) ? True : False;
+            case OBJ_STRING:
+                return strcmp(STR(obj1),STR(obj2)) == 0 ? True : False; 
+        }
+    }else{
     }
 }
 

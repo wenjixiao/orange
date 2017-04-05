@@ -92,29 +92,13 @@ Object* extend_env(VM* vm,Object* vars,Object* vals,Object* base_env){
         exit(1);
     }
 }
-/*
-Object* scan_in_frame(Object* frame,Object* var){
-    Object* frame_var;
-    Object* vars = CAR(frame);
-    Object* vals = CDR(frame);
-    while(vars != NULL && vals != NULL){
-        frame_var = CAR(vars);
-        if(var == frame_var){
-            return CAR(vals);
-        }
-        vars = CDR(vars),vals = CDR(vals);
-    }
-    //not found
-    return NULL;
-}
-*/
 /* no return: so,can't be embed in other exps */
 void define_variable(VM* vm,Object* var,Object* val,Object* env){
     Object* first_frame = CAR(env);
     Object* var_pair = CAR(first_frame); //vars list
     Object* val_pair = CDR(first_frame); //vals list
 
-    while(var_pair != NULL){
+    while(var_pair != Nil){
         if(var == CAR(var_pair)){
             //found
             CAR(val_pair) = val;
@@ -208,19 +192,6 @@ Object* lookup_variable_value(Object* var,Object* env){
     perror("unbound variable---lookup!");
     exit(1);
 }
-/*
-Object* lookup_variable_value(Object* var,Object* env){
-    Object *pair = env;
-    Object *val;
-    while(pair != NULL){
-        val = scan_in_frame(CAR(pair),var);
-        if(val != NULL) return val;
-        pair = CDR(pair);
-    }
-    perror("unbound variable!");
-    exit(1);
-}
-*/
 /* func -> (list 'primitive func) */
 Object* make_primitive_procedure(VM* vm,Object* primitive_procedure){
     return list2(vm,Primitive,primitive_procedure);
@@ -245,78 +216,6 @@ Object* init_env(VM* vm){
     return cons(vm,frame,Nil);
 }
 
-/*
-Object* get_object_from_token(VM* vm,Token* token){
-    Object* obj;
-    switch(token->type){
-        case INTEGER2:
-            obj = newIntegerObject(vm,string_to_int(token->text,2));
-            break;
-        case INTEGER8:
-            obj = newIntegerObject(vm,string_to_int(token->text,8));
-            break;
-        case INTEGER10:
-            obj = newIntegerObject(vm,string_to_int(token->text,10));
-            break;
-        case INTEGER16:
-            obj = newIntegerObject(vm,string_to_int(token->text,16));
-            break;
-        case BOOLEAN:
-            if(strcmp(token->text,"#t")==0){
-                obj = True;
-            }else if(strcmp(token->text,"#f")==0){
-                obj = False;
-            }else{
-                perror("boolean literal error!");
-                exit(1);
-            }
-            break;
-        case STRING:
-            obj = newStringObject(vm,heap_string(token->text));
-            break;
-        case IDENTIFIER:
-            obj = make_symbol(vm,token->text);
-            break;
-        default:
-            perror("the data type not supported now!");
-            exit(1);
-    }
-    return obj;
-}
-*/
-/* 
- * use stack to reverse the sequence of elements!
- */
-/*
-Object* obj_read(VM* vm,Token* tokens_head){
-    Token* token = tokens_head;
-    Token* out_token;
-    Object* parent = Nil;
-    Object* obj;
-    int in_stack_count = 0;
-
-    while(token != NULL){
-        if(token->type == RP){
-            while(in_stack_count > 0){
-                out_token = pop(vm),in_stack_count--;
-                if(out_token->type == LP){
-                    push(vm,parent);
-                    in_stack_count++;
-                    break;
-                }else{
-                    obj = get_object_from_token(vm,out_token);
-                    parent = cons(vm,obj,parent);
-                }
-            }
-        }else{
-            push(vm,token),in_stack_count++;
-        }
-        token=token->next;
-    }
-    
-    return pop(vm);
-}
-*/
 Object* obj_eval(VM* vm,Object* obj,Object* env);
 Object* obj_apply(VM* vm,Object* obj,Object* params);
 
@@ -363,7 +262,7 @@ Object* get_if_predicate(Object* obj){ return CADR(obj); }
 Object* get_if_consequent(Object* obj){ return CADDR(obj); }
 
 Object* get_if_alternative(VM* vm,Object* obj){
-    if(CDDDR(obj) != NULL){
+    if(CDDDR(obj) != Nil){
         return CADDDR(obj);
     }else{
         return False;
@@ -483,7 +382,7 @@ Object* get_procedure_env(Object* obj){ return CADDDR(obj); }
 Object* eval_sequence(VM* vm,Object* obj,Object* env){
     Object* result;
     Object* pair = obj;
-    while(pair != NULL){
+    while(pair != Nil){
         result = obj_eval(vm,obj,env);
         pair = CDR(pair);
     }
@@ -525,12 +424,12 @@ int main(int argc,char** argv){
 
     vm = newVM();
     init_consts(vm);
-    Object* global_env = init_env(vm);
+    Object* env = init_env(vm);
     obj_read(f);
     Object* o = pop(vm);
     printf("exp: ");
     printObject(o);
-    Object* r = obj_eval(vm,o,global_env);
+    Object* r = obj_eval(vm,o,env);
     printf("\n>>>");
     printObject(r);
     printf("\n");
