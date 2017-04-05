@@ -108,8 +108,8 @@ void define_variable(VM* vm,Object* var,Object* val,Object* env){
         val_pair = CDR(val_pair);
     }
     //not found,add new binding
-    CAR(var_pair) = var;
-    CAR(val_pair) = val;
+    CAR(first_frame) = append(vm,CAR(first_frame),var);
+    CDR(first_frame) = append(vm,CDR(first_frame),val);
 }
 /* return *void* object */
 Object* set_variable_value(VM* vm,Object* var,Object* val,Object* env){
@@ -219,6 +219,16 @@ Object* init_env(VM* vm){
 Object* obj_eval(VM* vm,Object* obj,Object* env);
 Object* obj_apply(VM* vm,Object* obj,Object* params);
 
+Object* sequence_eval(VM* vm,Object* obj,Object* env){
+    Object* p = obj;
+    Object* result;
+    while(p != Nil){
+        result = obj_eval(vm,CAR(p),env);       
+        p = CDR(p);
+    }
+    return result;
+}
+
 Object* get_assignment_variable(Object* obj){ return CADR(obj); }
 
 Object* get_assignment_value(Object* obj){ return CADDR(obj); }
@@ -254,7 +264,8 @@ void define_eval(VM* vm,Object* obj,Object* env){
     Object* val = obj_eval(vm,get_definition_value(vm,obj),env);
     pop(vm);
     pop(vm);
-    define_variable(vm,get_definition_variable(obj),val,env);
+    Object* var = get_definition_variable(obj);
+    define_variable(vm,var,val,env);
 }
 
 Object* get_if_predicate(Object* obj){ return CADR(obj); }
@@ -353,6 +364,7 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
         define_eval(vm,obj,env);
     }else if(is_list_tagged(obj,Keywords[KWD_BEGIN])){
         //begin
+        return sequence_eval(vm,CDR(obj),env);
     }else if(is_list_tagged(obj,Keywords[KWD_COND])){
         //cond
     }else if(obj->type == OBJ_PAIR){
