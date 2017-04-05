@@ -6,6 +6,7 @@
 
 #include "util.h"
 #include "vm.h"
+#include "interpreter.h"
 
 extern VM* vm;
 extern Object* Nil; // '()
@@ -94,7 +95,7 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {identifier} {
-    obj = newSymbolObject(vm,heap_string(yytext));
+    obj = make_symbol(vm,heap_string(yytext));
     push(vm,obj),in_stack_count++;
     printf("identifier: %s\n",yytext);
 }

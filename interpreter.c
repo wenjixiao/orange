@@ -525,15 +525,14 @@ int main(int argc,char** argv){
 
     vm = newVM();
     init_consts(vm);
-    //Object* global_env = init_env(vm);
+    Object* global_env = init_env(vm);
     obj_read(f);
     Object* o = pop(vm);
-    /*
+    printf("exp: ");
+    printObject(o);
     Object* r = obj_eval(vm,o,global_env);
-    printObject(o);
     printf("\n>>>");
-    */
-    printObject(o);
+    printObject(r);
     printf("\n");
 
     freeVM(vm);

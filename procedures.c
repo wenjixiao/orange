@@ -10,7 +10,7 @@ Object* primitive_add(VM* vm,Object* params){
     if(params == Nil) return newIntegerObject(vm,result);
 
     Object* pair=params;
-    while(pair != NULL){
+    while(pair != Nil){
         result += INTEGER(CAR(pair));
         pair = CDR(pair);
     }
@@ -29,7 +29,7 @@ Object* primitive_sub(VM* vm,Object* params){
     }
 
     int now = INTEGER(CAR(params));
-    for(Object* pair = CDR(params);pair != NULL;pair = CDR(pair)){
+    for(Object* pair = CDR(params);pair != Nil;pair = CDR(pair)){
         now -= INTEGER(CAR(pair));
     }
 
@@ -40,7 +40,7 @@ Object* primitive_gt(VM* vm,Object* params){
     Object* left_obj = CAR(params);
     Object* right_obj;
     Object* pair = CDR(params);
-    while(pair != NULL){
+    while(pair != Nil){
         right_obj = CAR(pair);
         if(left_obj->value.i > right_obj->value.i){
             pair = CDR(pair);

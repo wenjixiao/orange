@@ -16,7 +16,7 @@ vm.o : vm.c vm.h
 util.o : util.c util.h
 	gcc $(ops) -c $<
 
-parser.o : parser.c vm.h util.h
+parser.o : parser.c vm.h util.h interpreter.h
 	gcc $(ops) -c $<
 
 parser.c : parser.l
