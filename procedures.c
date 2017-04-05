@@ -3,9 +3,12 @@
 #include "util.h"
 #include "vm.h"
 
+extern Object *Nil,*True,*False;
+
 /* parameters is a list */
 /* + */
 Object* primitive_add(VM* vm,Object* params){
+    printf("----in add------\n");
     int result = 0;
     if(params == Nil) return newIntegerObject(vm,result);
 

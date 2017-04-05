@@ -5,6 +5,13 @@
 #include <ctype.h>
 #include <regex.h>
 
+#include "vm.h"
+
+void myprint(Object* obj,char* s){
+    printf("\n-------%s-------\n",s);
+    printObject(obj);
+    printf("\n-------%s-------\n",s);
+}
 
 /* char -> int 
  * '0' 48 '9' 57

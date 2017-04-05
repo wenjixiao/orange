@@ -1,3 +1,6 @@
+#ifndef VM_H
+#define VM_H
+
 #define STACK_MAX 256
 #define HEAP_SIZE (1024 * 1024)
 
@@ -68,8 +71,6 @@ void pushInt(VM* vm, int intValue);
 Object* pushPair(VM* vm);
 void printObject(Object* obj);
 
-extern Object *Nil,*True,*False,*Void;
-
 Object* cons(VM* vm,Object* car,Object* cdr);
 int length(Object* list);
 Object* append(VM* vm,Object* list,Object* obj);
@@ -86,3 +87,4 @@ Object* list2(VM* vm,Object* obj1,Object* obj2);
 Object* list3(VM* vm,Object* obj1,Object* obj2,Object* obj3);
 Object* list4(VM* vm,Object* obj1,Object* obj2,Object* obj3,Object* obj4);
 
+#endif

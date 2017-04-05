@@ -4,7 +4,9 @@
 #include <string.h>
 
 #include "vm.h"
+
 extern Object* Consts;
+extern Object *Nil,*True,*False;
 
 // Creates a new VM with an empty stack and an empty (but allocated) heap.
 VM* newVM() {
@@ -238,6 +240,7 @@ Object* pushPair(VM* vm) {
 }
 
 void printObject(Object* obj){
+    Object* pair;
     if(obj != Nil){
         switch(obj->type){
             case OBJ_INTEGER:
@@ -250,7 +253,7 @@ void printObject(Object* obj){
                 printf("%s",obj->value.s);
                 break;
             case OBJ_PRIMITIVE_PROCEDURE:
-                printf("%s","<#primitive_procedure>");
+                printf("%s","<#primitive>");
                 break;
             case OBJ_PAIR:
                 printf("(");
@@ -258,6 +261,19 @@ void printObject(Object* obj){
                 printf(",");
                 printObject(CDR(obj));
                 printf(")");
+                break;
+                /*
+            case OBJ_PAIR:
+                printf("(");
+                pair = obj;
+                while(CDR(pair) != Nil){
+                    printObject(CAR(pair));
+                    printf(",");
+                    pair = CDR(pair);
+                }  
+                printObject(CAR(pair));
+                printf(")");
+                */
         }
     }else{
         printf("nil");
@@ -302,15 +318,27 @@ Object* list1(VM* vm,Object* obj){
 }
 
 Object* list2(VM* vm,Object* obj1,Object* obj2){
-    return cons(vm,obj1,cons(vm,obj2,Nil));
+    Object* mylist = Nil;
+    mylist = append(vm,mylist,obj1);
+    mylist = append(vm,mylist,obj2);
+    return mylist;
 }
 
 Object* list3(VM* vm,Object* obj1,Object* obj2,Object* obj3){
-    return cons(vm,obj1,list2(vm,obj2,obj3));
+    Object* mylist = Nil;
+    mylist = append(vm,mylist,obj1);
+    mylist = append(vm,mylist,obj2);
+    mylist = append(vm,mylist,obj3);
+    return mylist;
 }
 
 Object* list4(VM* vm,Object* obj1,Object* obj2,Object* obj3,Object* obj4){
-    return cons(vm,obj1,list3(vm,obj2,obj3,obj4));
+    Object* mylist = Nil;
+    mylist = append(vm,mylist,obj1);
+    mylist = append(vm,mylist,obj2);
+    mylist = append(vm,mylist,obj3);
+    mylist = append(vm,mylist,obj4);
+    return mylist;
 }
 
 int length(Object* list){

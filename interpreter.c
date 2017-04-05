@@ -94,6 +94,9 @@ Object* extend_env(VM* vm,Object* vars,Object* vals,Object* base_env){
 }
 /* no return: so,can't be embed in other exps */
 void define_variable(VM* vm,Object* var,Object* val,Object* env){
+    if(CAR(val) == Procedure){
+        printf("******************\n");
+    }
     Object* first_frame = CAR(env);
     Object* var_pair = CAR(first_frame); //vars list
     Object* val_pair = CDR(first_frame); //vals list
@@ -220,13 +223,12 @@ Object* obj_eval(VM* vm,Object* obj,Object* env);
 Object* obj_apply(VM* vm,Object* obj,Object* params);
 
 Object* sequence_eval(VM* vm,Object* obj,Object* env){
-    Object* p = obj;
-    Object* result;
-    while(p != Nil){
-        result = obj_eval(vm,CAR(p),env);       
-        p = CDR(p);
+    Object* pair = obj;
+    while(CDR(pair) != Nil){
+        obj_eval(vm,CAR(pair),env); // not need return value
+        pair = CDR(pair);
     }
-    return result;
+    return obj_eval(vm,CAR(pair),env);
 }
 
 Object* get_assignment_variable(Object* obj){ return CADR(obj); }
@@ -253,10 +255,9 @@ Object* get_definition_value(VM* vm,Object* obj){
     if(CADR(obj)->type == OBJ_SYMBOL){
         return CADDR(obj);
     }else{
-        return make_lambda(vm,CDADR(obj),CDDR(obj));
+        return make_lambda(vm,CDADR(obj),CADDR(obj));
     }
 }
-
 
 void define_eval(VM* vm,Object* obj,Object* env){
     push(vm,env);
@@ -320,7 +321,7 @@ Object* list_of_values(VM* vm,Object* operands,Object* env){
 }
 
 Object* get_lambda_params(Object* obj){ return CADR(obj); }
-Object* get_lambda_body(Object* obj){ return CDDR(obj); }
+Object* get_lambda_body(Object* obj){ return CADDR(obj); }
 
 Object* make_procedure(VM* vm,Object* params,Object* body,Object* env){
     return list4(vm,Procedure,params,body,env);
@@ -337,6 +338,7 @@ int is_list_tagged(Object* list,Object* symbol){
 }
 //enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 Object* obj_eval(VM* vm,Object* obj,Object* env){
+    myprint(obj,"eval obj");
     if(obj->type == OBJ_INTEGER || obj->type == OBJ_STRING 
             || obj->type == OBJ_CHARACTER || obj->type == OBJ_BOOLEAN){
         //self evaluating
@@ -351,6 +353,7 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
             Object* myobj = make_procedure(vm,get_lambda_params(obj),get_lambda_body(obj),env);
             pop(vm);
             pop(vm);
+            return myobj;
     }else if(is_list_tagged(obj,Keywords[KWD_IF])){
         //if
         return if_eval(vm,obj,env);
@@ -377,7 +380,8 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
         pop(vm);
         pop(vm);
         pop(vm);
-        return obj_apply(vm,proc,args);
+        Object* result = obj_apply(vm,proc,args);
+        return result;
     }else{
         perror("unknow expression type");
         exit(1);
@@ -392,10 +396,11 @@ Object* get_procedure_parameters(Object* obj){ return CADR(obj); }
 Object* get_procedure_env(Object* obj){ return CADDDR(obj); }
 
 Object* eval_sequence(VM* vm,Object* obj,Object* env){
+    myprint(obj,"in seq");
     Object* result;
     Object* pair = obj;
     while(pair != Nil){
-        result = obj_eval(vm,obj,env);
+        result = obj_eval(vm,CAR(obj),env);
         pair = CDR(pair);
     }
     return result;
@@ -417,10 +422,10 @@ Object* obj_apply(VM* vm,Object* procedure,Object* arguments){
     if(is_primitive_procedure(vm,procedure)){
         return apply_primitive_procedure(vm,procedure,arguments);
     }else if(is_compound_procedure(vm,procedure)){
-        Object* myprocedure = get_procedure_body(procedure);
+        Object* procedure_body = get_procedure_body(procedure);
         Object* myparameters = get_procedure_parameters(procedure);
         Object* myenv = get_procedure_env(procedure);
-        return eval_sequence(vm,myprocedure,extend_env(vm,myparameters,arguments,myenv));
+        return eval_sequence(vm,cons(vm,procedure_body,Nil),extend_env(vm,myparameters,arguments,myenv));
     }else{
         perror("unknown procedure type!");
         exit(1);
