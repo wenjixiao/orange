@@ -321,7 +321,7 @@ Object* list_of_values(VM* vm,Object* operands,Object* env){
 }
 
 Object* get_lambda_params(Object* obj){ return CADR(obj); }
-Object* get_lambda_body(Object* obj){ return CADDR(obj); }
+Object* get_lambda_body(Object* obj){ return CDDR(obj); }
 
 Object* make_procedure(VM* vm,Object* params,Object* body,Object* env){
     return list4(vm,Procedure,params,body,env);
@@ -425,7 +425,7 @@ Object* obj_apply(VM* vm,Object* procedure,Object* arguments){
         Object* procedure_body = get_procedure_body(procedure);
         Object* myparameters = get_procedure_parameters(procedure);
         Object* myenv = get_procedure_env(procedure);
-        return eval_sequence(vm,cons(vm,procedure_body,Nil),extend_env(vm,myparameters,arguments,myenv));
+        return eval_sequence(vm,procedure_body,extend_env(vm,myparameters,arguments,myenv));
     }else{
         perror("unknown procedure type!");
         exit(1);
