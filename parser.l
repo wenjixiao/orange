@@ -145,6 +145,12 @@ whitespace          [ \n\t\r\v\f]+
             parent = Nil;
             in_stack_count++;
             break;
+        }else if(out_obj == make_symbol(vm,heap_string("#("))){
+            Object* vector_symbol_obj = make_symbol(vm,heap_string("vector"));
+            parent = cons(vm,vector_symbol_obj,parent);
+            push(vm,parent);
+            parent = Nil;
+            in_stack_count++;
         }else{
             parent = cons(vm,out_obj,parent);
         }
