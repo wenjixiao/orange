@@ -93,7 +93,8 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {vector} {
-    //obj = make_symbol(vm,heap_string(yytext));
+    obj = make_symbol(vm,heap_string(yytext));
+    push(vm,obj),in_stack_count++;
     printf("vector: %s\n",yytext);
 }
 
@@ -129,7 +130,7 @@ whitespace          [ \n\t\r\v\f]+
 
 {lp} {
     push(vm,Lparen),in_stack_count++;
-    //printf("lp: %s\n",yytext);
+    printf("lp: %s\n",yytext);
 }
 
 {rp} {
@@ -151,6 +152,7 @@ whitespace          [ \n\t\r\v\f]+
             push(vm,parent);
             parent = Nil;
             in_stack_count++;
+            break;
         }else{
             parent = cons(vm,out_obj,parent);
         }

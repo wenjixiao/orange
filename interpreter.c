@@ -336,7 +336,7 @@ int is_list_tagged(Object* list,Object* symbol){
 }
 //enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 Object* obj_eval(VM* vm,Object* obj,Object* env){
-    //myprint(obj,"eval obj");
+    myprint(obj,"eval obj");
     if(obj->type == OBJ_INTEGER || obj->type == OBJ_STRING 
             || obj->type == OBJ_CHARACTER || obj->type == OBJ_BOOLEAN){
         //self evaluating
@@ -369,6 +369,10 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
         return sequence_eval(vm,CDR(obj),env);
     }else if(is_list_tagged(obj,Keywords[KWD_COND])){
         //cond
+    }else if(is_list_tagged(obj,make_symbol(vm,"vector"))){
+        //vector
+        perror("not supported now!");
+        exit(1);
     }else if(obj->type == OBJ_PAIR){
         //applications
         push(vm,env);

@@ -10,6 +10,7 @@
 void myprint(Object* obj,char* s){
     printf("\n-------%s-------\n",s);
     obj_print(obj);
+    printf("\n-------%s-------\n",s);
 }
 
 /* char -> int 

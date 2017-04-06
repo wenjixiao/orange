@@ -267,6 +267,10 @@ void pair_print(Object* pair,int isBegin){
 }
 
 void obj_print(Object* obj){
+    if(obj == NULL) {
+        perror("obj is null!");
+        exit(1);
+    }
     if(obj != Nil){
         switch(obj->type){
             case OBJ_INTEGER:
