@@ -94,9 +94,6 @@ Object* extend_env(VM* vm,Object* vars,Object* vals,Object* base_env){
 }
 /* no return: so,can't be embed in other exps */
 void define_variable(VM* vm,Object* var,Object* val,Object* env){
-    if(CAR(val) == Procedure){
-        printf("******************\n");
-    }
     Object* first_frame = CAR(env);
     Object* var_pair = CAR(first_frame); //vars list
     Object* val_pair = CDR(first_frame); //vals list
@@ -338,7 +335,7 @@ int is_list_tagged(Object* list,Object* symbol){
 }
 //enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 Object* obj_eval(VM* vm,Object* obj,Object* env){
-    myprint(obj,"eval obj");
+    //myprint(obj,"eval obj");
     if(obj->type == OBJ_INTEGER || obj->type == OBJ_STRING 
             || obj->type == OBJ_CHARACTER || obj->type == OBJ_BOOLEAN){
         //self evaluating
@@ -395,17 +392,6 @@ Object* get_procedure_body(Object* obj){ return CADDR(obj); }
 Object* get_procedure_parameters(Object* obj){ return CADR(obj); }
 Object* get_procedure_env(Object* obj){ return CADDDR(obj); }
 
-Object* eval_sequence(VM* vm,Object* obj,Object* env){
-    myprint(obj,"in seq");
-    Object* result;
-    Object* pair = obj;
-    while(pair != Nil){
-        result = obj_eval(vm,CAR(obj),env);
-        pair = CDR(pair);
-    }
-    return result;
-}
-
 Object* get_primitive_procedure(Object* obj){ return CADR(obj); }
 
 /*
@@ -425,12 +411,42 @@ Object* obj_apply(VM* vm,Object* procedure,Object* arguments){
         Object* procedure_body = get_procedure_body(procedure);
         Object* myparameters = get_procedure_parameters(procedure);
         Object* myenv = get_procedure_env(procedure);
-        return eval_sequence(vm,procedure_body,extend_env(vm,myparameters,arguments,myenv));
+        return sequence_eval(vm,procedure_body,extend_env(vm,myparameters,arguments,myenv));
     }else{
         perror("unknown procedure type!");
         exit(1);
     }
 }
+
+Object* num(VM* vm,int i){
+    return newIntegerObject(vm,i);
+}
+/*
+void test_print(VM* vm){
+    Object* n1 = num(vm,1);
+    Object* n2 = num(vm,2);
+    Object* n3 = num(vm,3);
+    Object* n4 = num(vm,4);
+    Object* n5 = num(vm,5);
+    Object* n6 = num(vm,6);
+
+    Object* c12 = cons(vm,n1,n2);
+    Object* c34 = cons(vm,n3,n4);
+    Object* cc = cons(vm,c12,c34);
+
+    Object* l1 = list4(vm,n1,n2,n3,n4);
+    printf("---------------\n");
+    printObject(l1);
+    printf("\n");
+    printObject1(l1);
+    printf("\n");
+    printf("---------------\n");
+    printObject(cc);
+    printf("\n");
+    printObject1(cc);
+    printf("\n");
+}
+*/
 
 int main(int argc,char** argv){
     FILE *f;
@@ -445,10 +461,10 @@ int main(int argc,char** argv){
     obj_read(f);
     Object* o = pop(vm);
     printf("exp: ");
-    printObject(o);
+    obj_print(o);
     Object* r = obj_eval(vm,o,env);
     printf("\n>>>");
-    printObject(r);
+    obj_print(r);
     printf("\n");
 
     freeVM(vm);

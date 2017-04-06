@@ -54,11 +54,11 @@ whitespace          [ \n\t\r\v\f]+
 {string} {
     obj = newStringObject(vm,heap_string(yytext));
     push(vm,obj),in_stack_count++;
-    printf("string: %s\n",yytext);
+    //printf("string: %s\n",yytext);
 }
 
 {dot} {
-    printf("dot: %s\n",yytext);
+    //printf("dot: %s\n",yytext);
 }
 
 {boolean} {
@@ -71,62 +71,62 @@ whitespace          [ \n\t\r\v\f]+
         exit(1);
     }
     push(vm,obj),in_stack_count++;
-    printf("boolean: %s\n",yytext);
+    //printf("boolean: %s\n",yytext);
 }
 
 {unquote_splicing} {
-    printf("unquote_splicing: %s\n",yytext);
+    //printf("unquote_splicing: %s\n",yytext);
 }
 
 {comma} {
-    printf("comma: %s\n",yytext);
+    //printf("comma: %s\n",yytext);
 }
 
 {quasiquote} {
-    printf("quasiquote: %s\n",yytext);
+    //printf("quasiquote: %s\n",yytext);
 }
 
 {quote} {
-    printf("quote: %s\n",yytext);
+    //printf("quote: %s\n",yytext);
 }
 
 {vector} {
-    printf("vector: %s\n",yytext);
+    //printf("vector: %s\n",yytext);
 }
 
 {identifier} {
     obj = make_symbol(vm,heap_string(yytext));
     push(vm,obj),in_stack_count++;
-    printf("identifier: %s\n",yytext);
+    //printf("identifier: %s\n",yytext);
 }
 
 {b_integer} {
     obj = newIntegerObject(vm,string_to_int(yytext,2));
     push(vm,obj),in_stack_count++;
-    printf("b_integer: %s\n",yytext);
+    //printf("b_integer: %s\n",yytext);
 }
 
 {o_integer} {
     obj = newIntegerObject(vm,string_to_int(yytext,8));
     push(vm,obj),in_stack_count++;
-    printf("o_integer: %s\n",yytext);
+    //printf("o_integer: %s\n",yytext);
 }
 
 {d_integer} {
     obj = newIntegerObject(vm,string_to_int(yytext,10));
     push(vm,obj),in_stack_count++;
-    printf("d_integer: %s\n",yytext);
+    //printf("d_integer: %s\n",yytext);
 }
 
 {x_integer} {
     obj = newIntegerObject(vm,string_to_int(yytext,16));
     push(vm,obj),in_stack_count++;
-    printf("x_integer: %s\n",yytext);
+    //printf("x_integer: %s\n",yytext);
 }
 
 {lp} {
     push(vm,Lparen),in_stack_count++;
-    printf("lp: %s\n",yytext);
+    //printf("lp: %s\n",yytext);
 }
 
 {rp} {
@@ -141,7 +141,7 @@ whitespace          [ \n\t\r\v\f]+
             parent = cons(vm,out_obj,parent);
         }
     }
-    printf("rp: %s\n",yytext);
+    //printf("rp: %s\n",yytext);
 }
 
 {comment} {

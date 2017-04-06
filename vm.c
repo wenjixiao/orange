@@ -239,8 +239,59 @@ Object* pushPair(VM* vm) {
     return object;
 }
 
+void pair_print(Object* pair,int isBegin){
+    if(!isBegin){
+        printf("(");
+        pair_print(pair,1);
+    }else{
+        Object* left = CAR(pair);
+        Object* right = CDR(pair);
+
+        //print left
+        if(left->type != OBJ_PAIR){
+            obj_print(left);
+            printf(" ");
+        }else{
+            pair_print(left,0);
+        }
+        //print right
+        if(right == Nil || right->type != OBJ_PAIR){
+            if(right != Nil){
+                printf(" . ");
+                obj_print(right);
+            }
+            printf(") ");
+        }else{
+            pair_print(right,1);
+        }        
+    }
+}
+
+void obj_print(Object* obj){
+    if(obj != Nil){
+        switch(obj->type){
+            case OBJ_INTEGER:
+                printf("%d",obj->value.i);
+                break;
+            case OBJ_STRING:
+                printf("%s",obj->value.s);
+                break;
+            case OBJ_SYMBOL:
+                printf("%s",obj->value.s);
+                break;
+            case OBJ_PRIMITIVE_PROCEDURE:
+                printf("%s","<#primitive>");
+                break;
+            case OBJ_PAIR:
+                pair_print(obj,0);
+                break;
+        }
+    }else{
+        printf("nil");
+    }
+}
+/*
 void printObject(Object* obj){
-    Object* pair;
     if(obj != Nil){
         switch(obj->type){
             case OBJ_INTEGER:
@@ -262,24 +313,12 @@ void printObject(Object* obj){
                 printObject(CDR(obj));
                 printf(")");
                 break;
-                /*
-            case OBJ_PAIR:
-                printf("(");
-                pair = obj;
-                while(CDR(pair) != Nil){
-                    printObject(CAR(pair));
-                    printf(",");
-                    pair = CDR(pair);
-                }  
-                printObject(CAR(pair));
-                printf(")");
-                */
         }
     }else{
         printf("nil");
     }
 }
-
+*/
 Object* newIntegerObject(VM* vm,int i){
     Object* obj = newObject(vm,OBJ_INTEGER);
     obj->value.i = i;

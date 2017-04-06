@@ -69,7 +69,7 @@ void freeVM(VM *vm);
 Object* newObject(VM* vm, ObjectType type);
 void pushInt(VM* vm, int intValue);
 Object* pushPair(VM* vm);
-void printObject(Object* obj);
+void obj_print(Object* obj);
 
 Object* cons(VM* vm,Object* car,Object* cdr);
 int length(Object* list);
