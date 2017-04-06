@@ -1,4 +1,1 @@
-(begin 
-  (define (myadd a b) 
-    (+ a b))
-  (myadd 1 2))
+'(1 2 3 4)

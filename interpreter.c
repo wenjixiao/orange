@@ -7,7 +7,6 @@
 #include "parser.h"
 #include "procedures.h"
 
-
 enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 
 const char* Keyword_names[] = {"quote","set!","define","if","lambda","begin","cond"};
@@ -233,7 +232,9 @@ Object* get_assignment_variable(Object* obj){ return CADR(obj); }
 Object* get_assignment_value(Object* obj){ return CADDR(obj); }
 
 Object* set_eval(VM* vm,Object* obj,Object* env){
-
+    Object* var = get_assignment_variable(obj);
+    Object* val = obj_eval(vm,get_assignment_value(obj),env);
+    set_variable_value(vm,var,val,env);
 }
 
 Object* make_lambda(VM* vm,Object* parameters,Object* body){
@@ -356,6 +357,7 @@ Object* obj_eval(VM* vm,Object* obj,Object* env){
         return if_eval(vm,obj,env);
     }else if(is_list_tagged(obj,Keywords[KWD_QUOTE])){
         //quote
+        return CADR(obj);
     }else if(is_list_tagged(obj,Keywords[KWD_SET])){
         //set
         return set_eval(vm,obj,env);
@@ -418,10 +420,10 @@ Object* obj_apply(VM* vm,Object* procedure,Object* arguments){
     }
 }
 
+/*
 Object* num(VM* vm,int i){
     return newIntegerObject(vm,i);
 }
-/*
 void test_print(VM* vm){
     Object* n1 = num(vm,1);
     Object* n2 = num(vm,2);
@@ -447,7 +449,35 @@ void test_print(VM* vm){
     printf("\n");
 }
 */
+/*
+Object* get_list_data(VM* vm){
+    Object* data = Nil;
+    Object* obj;
+    while(vm->stackSize > 0){
+        obj = pop(vm);
+        printf("==");
+        obj_print(obj);
+        data = cons(vm,obj,data);
+    }
 
+    Object* data1 = Nil;
+    Object* p = data;
+    Object *nowObj,*nextObj;
+    while(p != Nil){
+        nowObj = CAR(p);
+        if(nowObj == Keywords[AB_QUOTE]){
+            nextObj = CADR(p);
+            data1 = append(vm,data1,list2(vm,Keywords[KWD_QUOTE],nextObj));
+            p = CDDR(p);
+        }else{
+            data1 = append(vm,data1,nowObj);       
+            p = CDR(p);
+        }
+    }
+    obj_print(data1);
+    return data1;
+}
+*/
 int main(int argc,char** argv){
     FILE *f;
     if(argc > 1)

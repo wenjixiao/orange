@@ -87,11 +87,14 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {quote} {
+    obj = make_symbol(vm,heap_string(yytext));
+    push(vm,obj),in_stack_count++;
     //printf("quote: %s\n",yytext);
 }
 
 {vector} {
-    //printf("vector: %s\n",yytext);
+    //obj = make_symbol(vm,heap_string(yytext));
+    printf("vector: %s\n",yytext);
 }
 
 {identifier} {
@@ -133,6 +136,11 @@ whitespace          [ \n\t\r\v\f]+
     while(in_stack_count > 0){
         out_obj = pop(vm),in_stack_count--;
         if(out_obj == Lparen){
+            if(vm->stackSize > 0 && (vm->stack[vm->stackSize-1] == make_symbol(vm,heap_string("'")))){
+                Object* quote_symbol_obj = pop(vm);
+                in_stack_count--;
+                parent = list2(vm,make_symbol(vm,heap_string("quote")),parent);
+            }
             push(vm,parent);
             parent = Nil;
             in_stack_count++;

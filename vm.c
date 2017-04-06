@@ -246,7 +246,6 @@ void pair_print(Object* pair,int isBegin){
     }else{
         Object* left = CAR(pair);
         Object* right = CDR(pair);
-
         //print left
         if(left->type != OBJ_PAIR){
             obj_print(left);
@@ -291,34 +290,34 @@ void obj_print(Object* obj){
     }
 }
 /*
-void printObject(Object* obj){
-    if(obj != Nil){
-        switch(obj->type){
-            case OBJ_INTEGER:
-                printf("%d",obj->value.i);
-                break;
-            case OBJ_STRING:
-                printf("%s",obj->value.s);
-                break;
-            case OBJ_SYMBOL:
-                printf("%s",obj->value.s);
-                break;
-            case OBJ_PRIMITIVE_PROCEDURE:
-                printf("%s","<#primitive>");
-                break;
-            case OBJ_PAIR:
-                printf("(");
-                printObject(CAR(obj));
-                printf(",");
-                printObject(CDR(obj));
-                printf(")");
-                break;
-        }
-    }else{
-        printf("nil");
-    }
-}
-*/
+   void printObject(Object* obj){
+   if(obj != Nil){
+   switch(obj->type){
+   case OBJ_INTEGER:
+   printf("%d",obj->value.i);
+   break;
+   case OBJ_STRING:
+   printf("%s",obj->value.s);
+   break;
+   case OBJ_SYMBOL:
+   printf("%s",obj->value.s);
+   break;
+   case OBJ_PRIMITIVE_PROCEDURE:
+   printf("%s","<#primitive>");
+   break;
+   case OBJ_PAIR:
+   printf("(");
+   printObject(CAR(obj));
+   printf(",");
+   printObject(CDR(obj));
+   printf(")");
+   break;
+   }
+   }else{
+   printf("nil");
+   }
+   }
+   */
 Object* newIntegerObject(VM* vm,int i){
     Object* obj = newObject(vm,OBJ_INTEGER);
     obj->value.i = i;
