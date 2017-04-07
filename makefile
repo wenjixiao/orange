@@ -1,7 +1,10 @@
+gc_include_path = /home/wenjixiao/gc/include
+gc_lib = /home/wenjixiao/gc/lib/libgc.a
+
 ops = -g -std=gnu99
 
 
-interpreter : interpreter.o procedures.o parser.o vm.o util.o -lm
+interpreter : interpreter.o procedures.o parser.o vm.o util.o $(gc_lib) -lm 
 	gcc -o $@ $^
 
 interpreter.o : interpreter.c util.h vm.h parser.h
@@ -11,7 +14,7 @@ procedures.o : procedures.c procedures.h vm.h
 	gcc $(ops) -c $<
 
 vm.o : vm.c vm.h
-	gcc $(ops) -c $<
+	gcc $(ops) -I$(gc_include_path) -c $<
 
 util.o : util.c util.h
 	gcc $(ops) -c $<
@@ -32,9 +35,9 @@ run: interpreter
 clean:
 	rm *.o
 	rm interpreter
-
-loop : loop.o /home/wenjixiao/gc/lib/libgc.a
+#/home/wenjixiao/gc/lib/libgc.a
+loop : loop.o $(gc_lib)
 	gcc -o $@ $^
 
 loop.o : loop.c
-	gcc $(ops) -I/home/wenjixiao/gc/include -c $<
+	gcc $(ops) -I$(gc_include_path) -c $<

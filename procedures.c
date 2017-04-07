@@ -7,9 +7,9 @@ extern Object *Nil,*True,*False;
 
 /* parameters is a list */
 /* + */
-Object* primitive_add(VM* vm,Object* params){
+Object* primitive_add(Object* params){
     int result = 0;
-    if(params == Nil) return newIntegerObject(vm,result);
+    if(params == Nil) return new_integer(result);
 
     Object* pair=params;
     while(pair != Nil){
@@ -17,17 +17,17 @@ Object* primitive_add(VM* vm,Object* params){
         pair = CDR(pair);
     }
 
-    return newIntegerObject(vm,result);
+    return new_integer(result);
 }
 /* - */
-Object* primitive_sub(VM* vm,Object* params){
+Object* primitive_sub(Object* params){
     if(params == Nil) {
         perror("params can't be empty!");
         exit(1);
     }
     if(length(params) == 1){
         int v = INTEGER(CAR(params));
-        return newIntegerObject(vm,0-v);
+        return new_integer(0-v);
     }
 
     int now = INTEGER(CAR(params));
@@ -35,10 +35,10 @@ Object* primitive_sub(VM* vm,Object* params){
         now -= INTEGER(CAR(pair));
     }
 
-    return newIntegerObject(vm,now);
+    return new_integer(now);
 }
 /* > */
-Object* primitive_gt(VM* vm,Object* params){
+Object* primitive_gt(Object* params){
     Object* left_obj = CAR(params);
     Object* right_obj;
     Object* pair = CDR(params);
@@ -53,17 +53,17 @@ Object* primitive_gt(VM* vm,Object* params){
     return True;
 }
 /* < */
-Object* primitive_lt(VM* vm,Object* params){
+Object* primitive_lt(Object* params){
 }
 /* = */
-Object* primitive_eq(VM* vm,Object* params){
+Object* primitive_eq(Object* params){
 }
 /* != */
-Object* primitive_not_eq(VM* vm,Object* params){
+Object* primitive_not_eq(Object* params){
 }
 /* >= */
-Object* primitive_gt_eq(VM* vm,Object* params){
+Object* primitive_gt_eq(Object* params){
 }
 /* <= */
-Object* primitive_lt_eq(VM* vm,Object* params){
+Object* primitive_lt_eq(Object* params){
 }

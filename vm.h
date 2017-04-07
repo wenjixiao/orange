@@ -2,7 +2,6 @@
 #define VM_H
 
 #define STACK_MAX 256
-#define HEAP_SIZE (1024 * 1024)
 
 #define PAIR(obj)       obj->value.pair
 
@@ -33,7 +32,6 @@ typedef enum {
 } ObjectType;
 
 typedef struct _object {
-    void *moveTo;
     ObjectType type;
     union {
         int i;
@@ -46,45 +44,30 @@ typedef struct _object {
     } value;
 } Object;
 
-// A virtual machine with its own virtual stack and heap. All objects live on
-// the heap. The stack just points to them.
-typedef struct {
-  Object* stack[STACK_MAX];
-  int stackSize;
+typedef struct _stack {
+    Object* objects[STACK_MAX];
+    int size;
+} Stack;
 
-  // The beginning of the contiguous heap of memory that objects are allocated
-  // from.
-  void* heap;
+void push(Stack* stack,Object* obj);
+Object* pop(Stack* stack);
 
-  // The beginning of the next chunk of memory to be allocated from the heap.
-  void* next;
-} VM;
-
-VM* newVM(); 
-void push(VM* vm, Object* value);
-Object* pop(VM* vm);
-void gc(VM* vm);
-void freeVM(VM *vm);
-
-Object* newObject(VM* vm, ObjectType type);
-void pushInt(VM* vm, int intValue);
-Object* pushPair(VM* vm);
 void obj_print(Object* obj);
-
-Object* cons(VM* vm,Object* car,Object* cdr);
+Object* cons(Object* car,Object* cdr);
 int length(Object* list);
-Object* append(VM* vm,Object* list,Object* obj);
+Object* append(Object* list,Object* obj);
 Object* last(Object* list);
 
-Object* newIntegerObject(VM* vm,int i);
-Object* newSymbolObject(VM* vm,char* symname);
-Object* newStringObject(VM* vm,char* s);
-Object* newPrimitiveProcedure(VM* vm,Object* (*primitive)());
+Object* new_object(ObjectType type);
+Object* new_integer(int i);
+Object* new_symbol(char* symname);
+Object* new_string(char* s);
+Object* new_primitive_procedure(Object* (*primitive)());
 
 
-Object* list1(VM* vm,Object* obj);
-Object* list2(VM* vm,Object* obj1,Object* obj2);
-Object* list3(VM* vm,Object* obj1,Object* obj2,Object* obj3);
-Object* list4(VM* vm,Object* obj1,Object* obj2,Object* obj3,Object* obj4);
+Object* list1(Object* obj);
+Object* list2(Object* obj1,Object* obj2);
+Object* list3(Object* obj1,Object* obj2,Object* obj3);
+Object* list4(Object* obj1,Object* obj2,Object* obj3,Object* obj4);
 
 #endif

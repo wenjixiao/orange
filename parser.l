@@ -8,7 +8,6 @@
 #include "vm.h"
 #include "interpreter.h"
 
-extern VM* vm;
 extern Object* Nil; // '()
 extern Object* True;
 extern Object* False;
@@ -18,6 +17,8 @@ static Object* obj;
 static Object* parent; // the list readed in
 static Object* out_obj;
 static int in_stack_count = 0;
+
+extern Stack* stack;
 
 /*
  * keyword quote|lambda|if|set!|begin|cond|and|or|case|
@@ -52,8 +53,8 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {string} {
-    obj = newStringObject(vm,heap_string(yytext));
-    push(vm,obj),in_stack_count++;
+    obj = new_string(heap_string(yytext));
+    push(stack,obj),in_stack_count++;
     //printf("string: %s\n",yytext);
 }
 
@@ -70,7 +71,7 @@ whitespace          [ \n\t\r\v\f]+
         perror("boolean literal error!");
         exit(1);
     }
-    push(vm,obj),in_stack_count++;
+    push(stack,obj),in_stack_count++;
     //printf("boolean: %s\n",yytext);
 }
 
@@ -87,74 +88,74 @@ whitespace          [ \n\t\r\v\f]+
 }
 
 {quote} {
-    obj = make_symbol(vm,heap_string(yytext));
-    push(vm,obj),in_stack_count++;
+    obj = make_symbol(heap_string(yytext));
+    push(stack,obj),in_stack_count++;
     //printf("quote: %s\n",yytext);
 }
 
 {vector} {
-    obj = make_symbol(vm,heap_string(yytext));
-    push(vm,obj),in_stack_count++;
+    obj = make_symbol(heap_string(yytext));
+    push(stack,obj),in_stack_count++;
     printf("vector: %s\n",yytext);
 }
 
 {identifier} {
-    obj = make_symbol(vm,heap_string(yytext));
-    push(vm,obj),in_stack_count++;
+    obj = make_symbol(heap_string(yytext));
+    push(stack,obj),in_stack_count++;
     //printf("identifier: %s\n",yytext);
 }
 
 {b_integer} {
-    obj = newIntegerObject(vm,string_to_int(yytext,2));
-    push(vm,obj),in_stack_count++;
+    obj = new_integer(string_to_int(yytext,2));
+    push(stack,obj),in_stack_count++;
     //printf("b_integer: %s\n",yytext);
 }
 
 {o_integer} {
-    obj = newIntegerObject(vm,string_to_int(yytext,8));
-    push(vm,obj),in_stack_count++;
+    obj = new_integer(string_to_int(yytext,8));
+    push(stack,obj),in_stack_count++;
     //printf("o_integer: %s\n",yytext);
 }
 
 {d_integer} {
-    obj = newIntegerObject(vm,string_to_int(yytext,10));
-    push(vm,obj),in_stack_count++;
+    obj = new_integer(string_to_int(yytext,10));
+    push(stack,obj),in_stack_count++;
     //printf("d_integer: %s\n",yytext);
 }
 
 {x_integer} {
-    obj = newIntegerObject(vm,string_to_int(yytext,16));
-    push(vm,obj),in_stack_count++;
+    obj = new_integer(string_to_int(yytext,16));
+    push(stack,obj),in_stack_count++;
     //printf("x_integer: %s\n",yytext);
 }
 
 {lp} {
-    push(vm,Lparen),in_stack_count++;
+    push(stack,Lparen),in_stack_count++;
     printf("lp: %s\n",yytext);
 }
 
 {rp} {
     while(in_stack_count > 0){
-        out_obj = pop(vm),in_stack_count--;
+        out_obj = pop(stack),in_stack_count--;
         if(out_obj == Lparen){
-            if(vm->stackSize > 0 && (vm->stack[vm->stackSize-1] == make_symbol(vm,heap_string("'")))){
-                Object* quote_symbol_obj = pop(vm);
+            if(stack->size > 0 && (stack->objects[stack->size-1] == make_symbol(heap_string("'")))){
+                Object* quote_symbol_obj = pop(stack);
                 in_stack_count--;
-                parent = list2(vm,make_symbol(vm,heap_string("quote")),parent);
+                parent = list2(make_symbol(heap_string("quote")),parent);
             }
-            push(vm,parent);
+            push(stack,parent);
             parent = Nil;
             in_stack_count++;
             break;
-        }else if(out_obj == make_symbol(vm,heap_string("#("))){
-            Object* vector_symbol_obj = make_symbol(vm,heap_string("vector"));
-            parent = cons(vm,vector_symbol_obj,parent);
-            push(vm,parent);
+        }else if(out_obj == make_symbol(heap_string("#("))){
+            Object* vector_symbol_obj = make_symbol(heap_string("vector"));
+            parent = cons(vector_symbol_obj,parent);
+            push(stack,parent);
             parent = Nil;
             in_stack_count++;
             break;
         }else{
-            parent = cons(vm,out_obj,parent);
+            parent = cons(out_obj,parent);
         }
     }
     //printf("rp: %s\n",yytext);
