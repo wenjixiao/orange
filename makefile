@@ -33,3 +33,8 @@ clean:
 	rm *.o
 	rm interpreter
 
+loop : loop.o /home/wenjixiao/gc/lib/libgc.a
+	gcc -o $@ $^
+
+loop.o : loop.c
+	gcc $(ops) -I/home/wenjixiao/gc/include -c $<
