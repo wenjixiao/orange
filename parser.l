@@ -16,8 +16,8 @@ extern Object* Lparen;
 static Object* obj;
 static Object* parent; // the list readed in
 static Object* out_obj;
-static int in_stack_count = 0;
 
+static int in_stack_count = 0;
 extern Stack* stack;
 
 /*
@@ -131,7 +131,7 @@ whitespace          [ \n\t\r\v\f]+
 
 {lp} {
     push(stack,Lparen),in_stack_count++;
-    printf("lp: %s\n",yytext);
+    //printf("lp: %s\n",yytext);
 }
 
 {rp} {

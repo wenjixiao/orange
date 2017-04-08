@@ -49,6 +49,7 @@ typedef struct _stack {
     int size;
 } Stack;
 
+Stack* make_stack();
 void push(Stack* stack,Object* obj);
 Object* pop(Stack* stack);
 

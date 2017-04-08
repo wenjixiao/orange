@@ -26,7 +26,7 @@ Object* False;
 Object* Void;
 /* global list for gc */
 Object* Consts; // as a root for gc mark
-
+/* make a global stack */
 Stack* stack;
 /*
  * find or generate a symbol
@@ -136,34 +136,7 @@ Object* set_variable_value(Object* var,Object* val,Object* env){
     perror("unbound variable---SET!");
     exit(1);
 }
-/*
- * env is a list of frame
- * frame is a pair of vals and vals
- * vars is a list of symbol
- * vals is a list of Object
- * */
-/*
-void hehe(Object* var,Object* val,Object* env){
-    Object* frame_list = env; //frame list
-    Object* myframe_pair;
-    Object* var_list; //variables list
-    Object* val_list; //values list
-    Object* myvar;
-    Object* myval;
-    while(frame_list != Nil){
-        myframe_pair = CAR(frame_list); //the frame we get!
-        var_list = CAR(myframe_pair); //list of vars
-        val_list = CDR(myframe_pair); //list of vals
-        while(var_list != Nil){
-            myvar = CAR(var_list); //the var we get!
-            myval = CAR(val_list); //the val we get!
-            var_list = CDR(var_list); //next var
-            val_list = CDR(val_list); //next val
-        }
-        frame_list = CDR(frame_list); //next frame
-    }
-}
-*/
+
 Object* lookup_variable_value(Object* var,Object* env){
     Object* frame_list = env; //frame list
     Object* myframe_pair;

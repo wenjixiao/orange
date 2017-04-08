@@ -93,35 +93,7 @@ void obj_print(Object* obj){
         printf("nil");
     }
 }
-/*
-   void printObject(Object* obj){
-   if(obj != Nil){
-   switch(obj->type){
-   case OBJ_INTEGER:
-   printf("%d",obj->value.i);
-   break;
-   case OBJ_STRING:
-   printf("%s",obj->value.s);
-   break;
-   case OBJ_SYMBOL:
-   printf("%s",obj->value.s);
-   break;
-   case OBJ_PRIMITIVE_PROCEDURE:
-   printf("%s","<#primitive>");
-   break;
-   case OBJ_PAIR:
-   printf("(");
-   printObject(CAR(obj));
-   printf(",");
-   printObject(CDR(obj));
-   printf(")");
-   break;
-   }
-   }else{
-   printf("nil");
-   }
-   }
-   */
+
 Object* new_integer(int i){
     Object* obj = new_object(OBJ_INTEGER);
     obj->value.i = i;
