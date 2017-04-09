@@ -2,19 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gc.h"
+#include "hashtable.h"
 #define M 3
-
-typedef struct _bucket {
-    char *key;
-    int value;
-    struct _bucket *next;
-} Bucket;
-
-typedef struct _hashtable {
-    unsigned size;
-    unsigned used;
-    Bucket *head;
-} HashTable;
 
 /*
  * 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47
@@ -44,9 +34,9 @@ unsigned int MULHash(unsigned k,int bits){
 }
 
 HashTable *hashtable_init(unsigned size){
-    HashTable *ht = (HashTable *) malloc(sizeof(HashTable));
+    HashTable *ht = (HashTable *) GC_MALLOC(sizeof(HashTable));
     ht->size = size;
-    ht->head = (Bucket *) calloc(ht->size,sizeof(Bucket));
+    ht->head = (Bucket *) GC_MALLOC(ht->size*sizeof(Bucket));
     return ht;
 }
 
@@ -66,7 +56,7 @@ void hashtable_put(HashTable *ht,char* key,int value){
             q = q->next;
         }
         if(q->next == NULL){
-            Bucket *new_bucket = (Bucket *) malloc(sizeof(Bucket));
+            Bucket *new_bucket = (Bucket *) GC_MALLOC(sizeof(Bucket));
             new_bucket->key = key;
             new_bucket->value = value;
             new_bucket->next = NULL;
@@ -117,7 +107,7 @@ void hashtable_delete(HashTable *ht,char* key){
                 p->value = q->value;
                 p->next = q->next;
                 ht->used--;
-                free(q);
+                //free(q);
             }else{
                 //not at head,in body list
                 Bucket *pre = p;
@@ -126,7 +116,7 @@ void hashtable_delete(HashTable *ht,char* key){
                     if(strcmp(q->key,key) == 0){
                        pre->next = q->next;
                        ht->used--;
-                       free(q);
+                       //free(q);
                        break;
                     }
                     pre = q;

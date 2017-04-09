@@ -25,6 +25,11 @@ parser.o : parser.c vm.h util.h interpreter.h
 parser.c : parser.l
 	flex -o parser.c parser.l 
 #--------------------------------------
+hashtable : hashtable.o $(gc_lib)
+	gcc -o $@ $^
+
+hashtable.o : hashtable.c hashtable.h
+	gcc $(ops) -I$(gc_include_path) -c $<
 #--------------------------------------
 test : test.c
 	gcc -std=gnu99 test.c -o test -lm
