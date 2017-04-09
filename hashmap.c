@@ -12,6 +12,7 @@ typedef struct _bucket {
 
 typedef struct _hashtable {
     unsigned size;
+    unsigned used;
     Bucket *head;
 } HashTable;
 
@@ -70,6 +71,7 @@ void hashtable_put(HashTable *ht,char* key,int value){
             new_bucket->value = value;
             new_bucket->next = NULL;
             q->next = new_bucket;
+            ht->used++;
         }
     }else{
         //the bucket is empty now
@@ -77,6 +79,7 @@ void hashtable_put(HashTable *ht,char* key,int value){
         p->key = key;
         p->value = value;
         p->next = NULL;
+        ht->used++;
     }
 }
 /* return a pointer to any type,you should change type from void* */
@@ -113,6 +116,7 @@ void hashtable_delete(HashTable *ht,char* key){
                 p->key = q->key;
                 p->value = q->value;
                 p->next = q->next;
+                ht->used--;
                 free(q);
             }else{
                 //not at head,in body list
@@ -121,6 +125,7 @@ void hashtable_delete(HashTable *ht,char* key){
                 do{
                     if(strcmp(q->key,key) == 0){
                        pre->next = q->next;
+                       ht->used--;
                        free(q);
                        break;
                     }
@@ -134,6 +139,7 @@ void hashtable_delete(HashTable *ht,char* key){
 
 void hashtable_print(HashTable *ht){
     printf("---------begin print---------\n");
+    printf("size=%d,used=%d\n",ht->size,ht->used);
     unsigned i;
     Bucket *p,*q;
     for(i=0;i<ht->size;i++){
@@ -155,7 +161,6 @@ void hashtable_print(HashTable *ht){
 
 void hashtable_test(){
     HashTable *ht = hashtable_init(M);
-    printf("size=%d\n",ht->size);
 
     hashtable_put(ht,"hello",1);
     hashtable_put(ht,"world",2);
@@ -168,11 +173,9 @@ void hashtable_test(){
     hashtable_put(ht,"you",6);
 
     hashtable_print(ht);
-    /*
     hashtable_delete(ht,"world");
     hashtable_delete(ht,"i");
     hashtable_print(ht);
-    */
 }
 //===============================================
 int main(){
