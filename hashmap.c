@@ -152,14 +152,8 @@ void hashtable_print(HashTable *ht){
         }
     }
 }
-//===============================================
-int *get_int(int i){
-    int *p = (int *) malloc(sizeof(int));
-    *p = i;
-    return p;
-}
-//===============================================
-int main(){
+
+void hashtable_test(){
     HashTable *ht = hashtable_init(M);
     printf("size=%d\n",ht->size);
 
@@ -179,5 +173,9 @@ int main(){
     hashtable_delete(ht,"i");
     hashtable_print(ht);
     */
+}
+//===============================================
+int main(){
+    hashtable_test();
     return 0;
 }
