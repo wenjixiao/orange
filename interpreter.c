@@ -308,7 +308,7 @@ int is_list_tagged(Object* list,Object* symbol){
 }
 //enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 Object* obj_eval(Object* obj,Object* env){
-    myprint(obj,"eval obj");
+    //myprint(obj,"eval obj");
     if(obj->type == OBJ_INTEGER || obj->type == OBJ_STRING 
             || obj->type == OBJ_CHARACTER || obj->type == OBJ_BOOLEAN){
         //self evaluating
