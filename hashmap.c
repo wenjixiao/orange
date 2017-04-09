@@ -2,20 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define M 37
+#define M 3
 
 typedef struct _bucket {
     char *key;
-    void *pvalue;
+    int value;
     struct _bucket *next;
 } Bucket;
 
 typedef struct _hashtable {
-    unsigned size; /* buckets count include free bucket and used bucket */
-    unsigned used; /* used buckets count */
+    unsigned size;
     Bucket *head;
 } HashTable;
 
+char *heap_string(const char *s){
+    char *str = (char *)malloc(strlen(s)+1);
+    strcpy(str,s);
+    return str;
+}
 /*
  * 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47
  * 53 59 61 67 71 73 79 83 89 97
@@ -46,7 +50,6 @@ unsigned int MULHash(unsigned k,int bits){
 HashTable *hashtable_init(unsigned size){
     HashTable *ht = (HashTable *) malloc(sizeof(HashTable));
     ht->size = size;
-    ht->used = 0;
     ht->head = (Bucket *) calloc(ht->size,sizeof(Bucket));
     return ht;
 }
@@ -57,52 +60,74 @@ static Bucket *_get_bucket(HashTable *ht,char *key){
     return ht->head+h*sizeof(Bucket);
 }
 
-void hashtable_insert(HashTable *ht,char* key,void *pvalue){
+void hashtable_insert(HashTable *ht,char* key,int value){
     Bucket *p = _get_bucket(ht,key);
-    p->key = key;
-    p->pvalue = pvalue;
-    ht->used++;
+    if(p->key != NULL){
+        //collision
+        printf("#insert collision\n");
+        Bucket *q = p;
+        while(q->next != NULL){
+            printf("go to last\n");
+            q = q->next;
+        }
+        if(q->next == NULL){
+            printf("ss\n");
+            Bucket *new_bucket = (Bucket *) malloc(sizeof(Bucket));
+            new_bucket->key = key;
+            new_bucket->value = value;
+            new_bucket->next = NULL;
+            q->next = new_bucket;
+        }
+    }else{
+        //the bucket is empty now
+        printf("#insert\n");
+        p->key = key;
+        p->value = value;
+        p->next = NULL;
+    }
 }
 /* return a pointer to any type,you should change type from void* */
-void *hashtable_get(HashTable *ht,char* key){
+int hashtable_get(HashTable *ht,char* key){
     Bucket *p = _get_bucket(ht,key);
     if(p->key != NULL){
         if(p->next == NULL){
-            return p->pvalue;
+            return p->value;
         }else{
+            //collision
             do{
                 if(strcmp(p->key,key)==0){
-                    return p->pvalue;
+                    return p->value;
                 }
                 p = p->next;
             }while(p != NULL);
         }
     }
-    return NULL;
+    return 0;
 }
 
 void hashtable_delete(HashTable *ht,char* key){
     Bucket *p = _get_bucket(ht,key);
     if(p->key != NULL){
         if(p->next == NULL){
-            p->key = NULL,p->pvalue = NULL;
+            //no collision,just one
+            p->key = NULL,p->value = 0;
         }else{
+            //it's a list
             if(strcmp(p->key,key)==0){
                 //head bucket is,so copy next to head
+                //here,p->next is not NULL!
                 p->key = p->next->key;
-                p->pvalue = p->next->pvalue;
+                p->value = p->next->value;
                 p->next = p->next->next;
                 free(p->next);
-                ht->used--;
             }else{
                 //not at head,in body list
                 Bucket *pre = p;
-                Bucket *q = p->next;
+                Bucket *q = p->next; //here,q is not NULL too!
                 do{
-                    if(strcmp(q->key,key)==0){
+                    if(strcmp(q->key,key) == 0){
                        pre->next = q->next;
                        free(q);
-                       ht->used--;
                        break;
                     }
                     pre = q;
@@ -113,16 +138,23 @@ void hashtable_delete(HashTable *ht,char* key){
     }
 }
 
-void hashtable_print(HashTable *ht,void (* func)()){
-    printf("------------------\n");
+void hashtable_print(HashTable *ht){
+    printf("---------begin print---------\n");
     unsigned i;
-    Bucket *p;
+    Bucket *p,*q;
     for(i=0;i<ht->size;i++){
-        p=ht->head+i*sizeof(Bucket);
+        p = ht->head + i*sizeof(Bucket);
         if(p->key != NULL){
-            printf("index=%u,key=%s,",i,p->key);
-            (*func)(p->pvalue);
+            printf("index=%u: %s=>%d",i,p->key,p->value);
+            q = p->next;
+            while(q != NULL){
+                printf("|");
+                printf("%s=>%d",q->key,q->value);
+                q = q->next;
+            }
             printf("\n");
+        }else{
+            printf("key is NULL!\n");
         }
     }
 }
@@ -130,6 +162,8 @@ void hashtable_print(HashTable *ht,void (* func)()){
 int *get_int(int i){
     int *p = (int *) malloc(sizeof(int));
     *p = i;
+    printf("int:%d\n",*p);
+    return p;
 }
 
 void int_print(void *p){
@@ -141,9 +175,21 @@ int main(){
     HashTable *ht = hashtable_init(M);
     printf("size=%d\n",ht->size);
 
-    hashtable_insert(ht,"hello",get_int(1));
-    hashtable_insert(ht,"you",get_int(2));
-
+    hashtable_insert(ht,"hello",1);
+    hashtable_insert(ht,"world",2);
+    hashtable_insert(ht,"i",3);
+    hashtable_insert(ht,"am",4);
+    hashtable_insert(ht,"father",886);
+    hashtable_insert(ht,"your",5);
+    hashtable_insert(ht,"I",9);
+    hashtable_insert(ht,"love",77);
+    hashtable_insert(ht,"you",6);
+    /*
+    hashtable_insert(ht,"am",get_int(4));
+    hashtable_insert(ht,"father",get_int(886));
+    hashtable_insert(ht,"your",get_int(5));
+    */
+    /*
     void *v = hashtable_get(ht,"iamwen");
 
     if(v == NULL){
@@ -153,9 +199,8 @@ int main(){
         int_print(v);
         printf("\n");
     }
+    */
 
-    hashtable_print(ht,int_print);
-    hashtable_delete(ht,"you");
-    hashtable_print(ht,int_print);
+    hashtable_print(ht);
     return 0;
 }
