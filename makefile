@@ -24,6 +24,13 @@ parser.o : parser.c vm.h util.h interpreter.h
 
 parser.c : parser.l
 	flex -o parser.c parser.l 
+
+run: interpreter
+	./interpreter example.scm
+
+clean:
+	rm *.o
+	rm interpreter
 #--------------------------------------
 hashtable : hashtable.o 
 	gcc -o $@ $^ -L$(gc_lib) -lgc
@@ -36,11 +43,4 @@ test : test_scheme.o
 
 test_scheme.o : test_scheme.c
 	gcc -c $<
-
-run: interpreter
-	./interpreter example.scm
-
-clean:
-	rm *.o
-	rm interpreter
 #--------------------------------------

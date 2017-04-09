@@ -17,8 +17,25 @@ static Object* obj;
 static Object* parent; // the list readed in
 static Object* out_obj;
 
-static int in_stack_count = 0;
-extern Stack* stack;
+Stack* stack;
+
+FILE *f;
+int Work_model;
+
+int check_stack_for_return(){
+    if(stack->size == 1){
+        Object* obj = stack->objects[0];
+        if(obj->type == OBJ_PAIR){
+            return 1;
+        }else if(obj == Lparen){
+            return 0;
+        }else{
+            return 1;
+        }
+    }else{
+        return 0;
+    }
+}
 
 /*
  * keyword quote|lambda|if|set!|begin|cond|and|or|case|
@@ -54,7 +71,8 @@ whitespace          [ \n\t\r\v\f]+
 
 {string} {
     obj = new_string(heap_string(yytext));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
+    if(check_stack_for_return()) return 1;
     //printf("string: %s\n",yytext);
 }
 
@@ -71,7 +89,8 @@ whitespace          [ \n\t\r\v\f]+
         perror("boolean literal error!");
         exit(1);
     }
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
+    if(check_stack_for_return()) return 1;
     //printf("boolean: %s\n",yytext);
 }
 
@@ -89,75 +108,80 @@ whitespace          [ \n\t\r\v\f]+
 
 {quote} {
     obj = make_symbol(heap_string(yytext));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
+    if(check_stack_for_return()) return 1;
     //printf("quote: %s\n",yytext);
 }
 
 {vector} {
     obj = make_symbol(heap_string(yytext));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
     printf("vector: %s\n",yytext);
+    if(check_stack_for_return()) return 1;
 }
 
 {identifier} {
     obj = make_symbol(heap_string(yytext));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
+    if(check_stack_for_return()) return 1;
     //printf("identifier: %s\n",yytext);
 }
 
 {b_integer} {
     obj = new_integer(string_to_int(yytext,2));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
     //printf("b_integer: %s\n",yytext);
+    if(check_stack_for_return()) return 1;
 }
 
 {o_integer} {
     obj = new_integer(string_to_int(yytext,8));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
+    if(check_stack_for_return()) return 1;
     //printf("o_integer: %s\n",yytext);
 }
 
 {d_integer} {
     obj = new_integer(string_to_int(yytext,10));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
+    if(check_stack_for_return()) return 1;
     //printf("d_integer: %s\n",yytext);
 }
 
 {x_integer} {
     obj = new_integer(string_to_int(yytext,16));
-    push(stack,obj),in_stack_count++;
+    push(stack,obj);
+    if(check_stack_for_return()) return 1;
     //printf("x_integer: %s\n",yytext);
 }
 
 {lp} {
-    push(stack,Lparen),in_stack_count++;
+    push(stack,Lparen);
     //printf("lp: %s\n",yytext);
 }
 
 {rp} {
-    while(in_stack_count > 0){
-        out_obj = pop(stack),in_stack_count--;
+    while(stack->size > 0){
+        out_obj = pop(stack);
         if(out_obj == Lparen){
             if(stack->size > 0 && (stack->objects[stack->size-1] == make_symbol(heap_string("'")))){
                 Object* quote_symbol_obj = pop(stack);
-                in_stack_count--;
                 parent = list2(make_symbol(heap_string("quote")),parent);
             }
             push(stack,parent);
             parent = Nil;
-            in_stack_count++;
             break;
         }else if(out_obj == make_symbol(heap_string("#("))){
             Object* vector_symbol_obj = make_symbol(heap_string("vector"));
             parent = cons(vector_symbol_obj,parent);
             push(stack,parent);
             parent = Nil;
-            in_stack_count++;
             break;
         }else{
             parent = cons(out_obj,parent);
         }
     }
+    if(check_stack_for_return()) return 1;
     //printf("rp: %s\n",yytext);
 }
 
@@ -171,6 +195,7 @@ whitespace          [ \n\t\r\v\f]+
 
 . {
     printf("other_things: %s\n",yytext);
+    exit(1);
 } 
 
 %%
@@ -178,23 +203,50 @@ whitespace          [ \n\t\r\v\f]+
 void obj_read(FILE *f){
     parent = Nil;
     yyin = f;
-    yylex();
+    Object *o,*result;
+    Object *env = init_env();
+
+    printf(">");
+    while(yylex()){
+        o = pop(stack);
+        result = obj_eval(o,env);
+        //printf("\n");
+        obj_print(result);
+        if(Work_model == 1){
+            printf("\n>");
+        }
+    }
+    printf("\n-----obj_read returned-----\n");
 }
 
 int yywrap(){
     return 1;
 }
 
-/*
 int main(int argc,char** argv){
-    FILE *f;
-    if(argc > 1)
+    if(argc > 1){
+        Work_model = 0;
         f = fopen(argv[1], "r");
-    else
+    }else{
+        Work_model = 1;
         f = stdin;
+    }
 
-    Token *tokens_head = (Token *) get_tokens(f);
-    print_tokens();
+    stack = make_stack();
+    init_consts();
+    obj_read(f);
+    /*
+    obj_read(f);
+    Object* o = pop(stack);
+    printf("exp: ");
+    obj_print(o);
+    Object* env = init_env();
+    Object* r = obj_eval(o,env);
+    printf("\n>>>");
+    obj_print(r);
+    printf("\n");
+    */
+
+    fclose(f);
     return 0;
 }
-*/

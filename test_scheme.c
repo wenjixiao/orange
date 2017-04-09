@@ -8,7 +8,8 @@
 
 
 START_TEST (test_add){
-    ck_assert_int_eq(3,5);
+    //ck_assert_int_eq(3,5);
+    ck_assert_msg(3==5,"3==5?");
     //fail_unless(3 == 2,"error,3!=2");
 }
 END_TEST

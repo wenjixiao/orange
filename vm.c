@@ -6,8 +6,9 @@
 #include "vm.h"
 #include "gc.h"
 
-extern Object* Consts;
+extern Object *Consts;
 extern Object *Nil,*True,*False;
+extern Object *Procedure;
 
 Stack* make_stack(){
     Stack* stack = (Stack*) GC_MALLOC(sizeof(Stack));
@@ -86,7 +87,12 @@ void obj_print(Object* obj){
                 printf("%s","<#primitive>");
                 break;
             case OBJ_PAIR:
-                pair_print(obj,0);
+                if(CAR(obj) == Procedure){
+                    printf("%s","<#procedure>");
+                }else{
+                    obj_print(CAR(obj));
+                    //pair_print(obj,0);
+                }
                 break;
         }
     }else{

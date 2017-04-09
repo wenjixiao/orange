@@ -6,6 +6,7 @@
 #include "vm.h"
 #include "parser.h"
 #include "procedures.h"
+#include "interpreter.h"
 
 enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 
@@ -27,7 +28,7 @@ Object* Void;
 /* global list for gc */
 Object* Consts; // as a root for gc mark
 /* make a global stack */
-Stack* stack;
+extern Stack* stack;
 /*
  * find or generate a symbol
  * maybe the symbol table should depends on env,
@@ -425,25 +426,3 @@ void test_print(){
     printf("\n");
 }
 */
-
-int main(int argc,char** argv){
-    FILE *f;
-    if(argc > 1)
-        f = fopen(argv[1], "r");
-    else
-        f = stdin;
-    stack = make_stack();
-    init_consts();
-    obj_read(f);
-    Object* o = pop(stack);
-    printf("exp: ");
-    obj_print(o);
-    Object* env = init_env();
-    Object* r = obj_eval(o,env);
-    printf("\n>>>");
-    obj_print(r);
-    printf("\n");
-
-    fclose(f);
-    return 0;
-}
