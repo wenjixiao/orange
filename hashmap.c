@@ -15,11 +15,6 @@ typedef struct _hashtable {
     Bucket *head;
 } HashTable;
 
-char *heap_string(const char *s){
-    char *str = (char *)malloc(strlen(s)+1);
-    strcpy(str,s);
-    return str;
-}
 /*
  * 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47
  * 53 59 61 67 71 73 79 83 89 97
@@ -60,18 +55,16 @@ static Bucket *_get_bucket(HashTable *ht,char *key){
     return ht->head+h*sizeof(Bucket);
 }
 
-void hashtable_insert(HashTable *ht,char* key,int value){
+void hashtable_put(HashTable *ht,char* key,int value){
     Bucket *p = _get_bucket(ht,key);
     if(p->key != NULL){
         //collision
         printf("#insert collision\n");
         Bucket *q = p;
         while(q->next != NULL){
-            printf("go to last\n");
             q = q->next;
         }
         if(q->next == NULL){
-            printf("ss\n");
             Bucket *new_bucket = (Bucket *) malloc(sizeof(Bucket));
             new_bucket->key = key;
             new_bucket->value = value;
@@ -116,10 +109,11 @@ void hashtable_delete(HashTable *ht,char* key){
             if(strcmp(p->key,key)==0){
                 //head bucket is,so copy next to head
                 //here,p->next is not NULL!
-                p->key = p->next->key;
-                p->value = p->next->value;
-                p->next = p->next->next;
-                free(p->next);
+                Bucket *q = p->next;
+                p->key = q->key;
+                p->value = q->value;
+                p->next = q->next;
+                free(q);
             }else{
                 //not at head,in body list
                 Bucket *pre = p;
@@ -162,45 +156,28 @@ void hashtable_print(HashTable *ht){
 int *get_int(int i){
     int *p = (int *) malloc(sizeof(int));
     *p = i;
-    printf("int:%d\n",*p);
     return p;
-}
-
-void int_print(void *p){
-    int *v = (int *) p;
-    printf("%d",*v);
 }
 //===============================================
 int main(){
     HashTable *ht = hashtable_init(M);
     printf("size=%d\n",ht->size);
 
-    hashtable_insert(ht,"hello",1);
-    hashtable_insert(ht,"world",2);
-    hashtable_insert(ht,"i",3);
-    hashtable_insert(ht,"am",4);
-    hashtable_insert(ht,"father",886);
-    hashtable_insert(ht,"your",5);
-    hashtable_insert(ht,"I",9);
-    hashtable_insert(ht,"love",77);
-    hashtable_insert(ht,"you",6);
-    /*
-    hashtable_insert(ht,"am",get_int(4));
-    hashtable_insert(ht,"father",get_int(886));
-    hashtable_insert(ht,"your",get_int(5));
-    */
-    /*
-    void *v = hashtable_get(ht,"iamwen");
-
-    if(v == NULL){
-        printf("not found!\n");
-    }else{
-        printf("found: ");
-        int_print(v);
-        printf("\n");
-    }
-    */
+    hashtable_put(ht,"hello",1);
+    hashtable_put(ht,"world",2);
+    hashtable_put(ht,"i",3);
+    hashtable_put(ht,"am",4);
+    hashtable_put(ht,"father",886);
+    hashtable_put(ht,"your",5);
+    hashtable_put(ht,"I",9);
+    hashtable_put(ht,"love",77);
+    hashtable_put(ht,"you",6);
 
     hashtable_print(ht);
+    /*
+    hashtable_delete(ht,"world");
+    hashtable_delete(ht,"i");
+    hashtable_print(ht);
+    */
     return 0;
 }
