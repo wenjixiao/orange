@@ -195,7 +195,7 @@ whitespace          [ \n\t\r\v\f]+
 
 . {
     printf("other_things: %s\n",yytext);
-    exit(1);
+    return -1; /* maybe go back to obj_read,do some process */
 } 
 
 %%
@@ -210,13 +210,15 @@ void obj_read(FILE *f){
     while(yylex()){
         o = pop(stack);
         result = obj_eval(o,env);
-        //printf("\n");
+        if(Work_model == 0){
+            printf("\n");
+        }
         obj_print(result);
         if(Work_model == 1){
             printf("\n>");
         }
     }
-    printf("\n-----obj_read returned-----\n");
+    printf("\n");
 }
 
 int yywrap(){
@@ -235,18 +237,6 @@ int main(int argc,char** argv){
     stack = make_stack();
     init_consts();
     obj_read(f);
-    /*
-    obj_read(f);
-    Object* o = pop(stack);
-    printf("exp: ");
-    obj_print(o);
-    Object* env = init_env();
-    Object* r = obj_eval(o,env);
-    printf("\n>>>");
-    obj_print(r);
-    printf("\n");
-    */
-
     fclose(f);
     return 0;
 }
