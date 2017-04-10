@@ -1,2 +1,2 @@
-(begin (define a 2) (+ 1 a))
-(+ 1 999)
+(define myadd (lambda (a b) (+ a b) 9))
+(myadd 1 2)

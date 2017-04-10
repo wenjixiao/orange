@@ -226,11 +226,11 @@ Object* get_definition_value(Object* obj){
     if(CADR(obj)->type == OBJ_SYMBOL){
         return CADDR(obj);
     }else{
-        return make_lambda(CDADR(obj),CADDR(obj));
+        return make_lambda(CDADR(obj),CDDR(obj));
     }
 }
 
-void define_eval(Object* obj,Object* env){
+Object* define_eval(Object* obj,Object* env){
     push(stack,env);
     push(stack,obj);
     Object* val = obj_eval(get_definition_value(obj),env);
@@ -238,6 +238,7 @@ void define_eval(Object* obj,Object* env){
     pop(stack);
     Object* var = get_definition_variable(obj);
     define_variable(var,val,env);
+    return Void;
 }
 
 Object* get_if_predicate(Object* obj){ return CADR(obj); }
@@ -336,7 +337,7 @@ Object* obj_eval(Object* obj,Object* env){
         return set_eval(obj,env);
     }else if(is_list_tagged(obj,Keywords[KWD_DEFINE])){
         //define
-        define_eval(obj,env);
+        return define_eval(obj,env);
     }else if(is_list_tagged(obj,Keywords[KWD_BEGIN])){
         //begin
         return sequence_eval(CDR(obj),env);
