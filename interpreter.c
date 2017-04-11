@@ -74,7 +74,7 @@ void init_consts(){
     Rparen = make_symbol(")");
     /* add them to global_const_list */
     Consts = Nil;
-    Consts = list4(Nil,True,False,Void);
+    Consts = new_list4(Nil,True,False,Void);
     Consts = cons(Symbols,Consts);
 }
 /* env is a list of frame.
@@ -166,7 +166,7 @@ Object* lookup_variable_value(Object* var,Object* env){
 }
 /* func -> (list 'primitive func) */
 Object* make_primitive_procedure(Object* primitive_procedure){
-    return list2(Primitive,primitive_procedure);
+    return new_list2(Primitive,primitive_procedure);
 }
 
 void add_primitive_procedure(Object* frame,char* symname,Object* (*func)()){
@@ -296,7 +296,7 @@ Object* get_lambda_params(Object* obj){ return CADR(obj); }
 Object* get_lambda_body(Object* obj){ return CDDR(obj); }
 
 Object* make_procedure(Object* params,Object* body,Object* env){
-    return list4(Procedure,params,body,env);
+    return new_list4(Procedure,params,body,env);
 }
 
 int is_list_tagged(Object* list,Object* symbol){

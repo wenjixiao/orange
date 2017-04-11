@@ -66,9 +66,9 @@ Object* new_string(char* s);
 Object* new_primitive_procedure(Object* (*primitive)());
 
 
-Object* list1(Object* obj);
-Object* list2(Object* obj1,Object* obj2);
-Object* list3(Object* obj1,Object* obj2,Object* obj3);
-Object* list4(Object* obj1,Object* obj2,Object* obj3,Object* obj4);
+Object* new_list1(Object* obj);
+Object* new_list2(Object* obj1,Object* obj2);
+Object* new_list3(Object* obj1,Object* obj2,Object* obj3);
+Object* new_list4(Object* obj1,Object* obj2,Object* obj3,Object* obj4);
 
 #endif

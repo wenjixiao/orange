@@ -139,32 +139,20 @@ Object* cons(Object* car,Object* cdr){
 
 Object* is_empty(Object* list){ return list == Nil ? True : False; }
 
-Object* list1(Object* obj){
+Object* new_list1(Object* obj){
     return cons(obj,Nil);
 }
 
-Object* list2(Object* obj1,Object* obj2){
-    Object* mylist = Nil;
-    mylist = append(mylist,obj1);
-    mylist = append(mylist,obj2);
-    return mylist;
+Object* new_list2(Object* obj1,Object* obj2){
+	return cons(obj1,new_list1(obj2));
 }
 
-Object* list3(Object* obj1,Object* obj2,Object* obj3){
-    Object* mylist = Nil;
-    mylist = append(mylist,obj1);
-    mylist = append(mylist,obj2);
-    mylist = append(mylist,obj3);
-    return mylist;
+Object* new_list3(Object* obj1,Object* obj2,Object* obj3){
+	return cons(obj1,new_list2(obj2,obj3));
 }
 
-Object* list4(Object* obj1,Object* obj2,Object* obj3,Object* obj4){
-    Object* mylist = Nil;
-    mylist = append(mylist,obj1);
-    mylist = append(mylist,obj2);
-    mylist = append(mylist,obj3);
-    mylist = append(mylist,obj4);
-    return mylist;
+Object* new_list4(Object* obj1,Object* obj2,Object* obj3,Object* obj4){
+	return cons(obj1,new_list3(obj2,obj3,obj4));
 }
 
 int length(Object* list){

@@ -166,7 +166,7 @@ whitespace          [ \n\t\r\v\f]+
         if(out_obj == Lparen){
             if(stack->size > 0 && (stack->objects[stack->size-1] == make_symbol(heap_string("'")))){
                 Object* quote_symbol_obj = pop(stack);
-                parent = list2(make_symbol(heap_string("quote")),parent);
+                parent = new_list2(make_symbol(heap_string("quote")),parent);
             }
             push(stack,parent);
             parent = Nil;
