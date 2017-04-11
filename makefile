@@ -16,8 +16,8 @@ procedures.o : procedures.c procedures.h object.h
 object.o : object.c object.h
 	gcc $(ops) -c $< -I$(gc_include)
 
-util.o : util.c util.h
-	gcc $(ops) -c $<
+util.o : util.c util.h object.h
+	gcc $(ops) -c $< -I$(gc_include)
 
 parser.o : parser.c object.h util.h interpreter.h
 	gcc $(ops) -c $<

@@ -44,15 +44,7 @@ typedef struct _object {
     } value;
 } Object;
 
-typedef struct _stack {
-    Object* objects[STACK_MAX];
-    int size;
-} Stack;
-
-Stack* make_stack();
-void push(Stack* stack,Object* obj);
-Object* pop(Stack* stack);
-
+void myprint(Object* obj,char* s);
 void obj_print(Object* obj);
 Object* cons(Object* car,Object* cdr);
 int length(Object* list);

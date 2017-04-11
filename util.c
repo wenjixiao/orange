@@ -6,13 +6,32 @@
 #include <regex.h>
 
 #include "object.h"
+#include "util.h"
+#include "gc.h"
 
-void myprint(Object* obj,char* s){
-    printf("\n-------%s-------\n",s);
-    obj_print(obj);
-    printf("\n-------%s-------\n",s);
+Stack* make_stack(){
+    Stack* stack = (Stack*) GC_MALLOC(sizeof(Stack));
+    stack->size = 0;
+    return stack;
 }
 
+void push(Stack* stack,Object* obj){
+    if(stack->size < STACK_MAX){
+        stack->objects[stack->size++] = obj;
+    }else{
+        perror("stack overflow!");
+        exit(1);
+    }
+}
+
+Object* pop(Stack* stack){
+    if(stack->size > 0){
+        return stack->objects[--stack->size];
+    }else{
+        perror("stack is empty!");
+        exit(1);
+    }
+}
 /* char -> int 
  * '0' 48 '9' 57
  * 'a' 97 'f' 102 'z' 122

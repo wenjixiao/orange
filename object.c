@@ -9,30 +9,6 @@
 extern Object *Nil,*True,*False;
 extern Object *Procedure;
 
-Stack* make_stack(){
-    Stack* stack = (Stack*) GC_MALLOC(sizeof(Stack));
-    stack->size = 0;
-    return stack;
-}
-
-void push(Stack* stack,Object* obj){
-    if(stack->size < STACK_MAX){
-        stack->objects[stack->size++] = obj;
-    }else{
-        perror("stack overflow!");
-        exit(1);
-    }
-}
-
-Object* pop(Stack* stack){
-    if(stack->size > 0){
-        return stack->objects[--stack->size];
-    }else{
-        perror("stack is empty!");
-        exit(1);
-    }
-}
-
 Object* new_object(ObjectType type) {
     Object* obj = (Object*) GC_MALLOC(sizeof(Object));
     obj->type = type;
@@ -105,6 +81,12 @@ void obj_print(Object* obj){
     }
 }
 
+void myprint(Object* obj,char* s){
+    printf("\n-------%s-------\n",s);
+    obj_print(obj);
+    printf("\n-------%s-------\n",s);
+}
+
 Object* new_integer(int i){
     Object* obj = new_object(OBJ_INTEGER);
     obj->value.i = i;
@@ -138,9 +120,7 @@ Object* cons(Object* car,Object* cdr){
 
 Object* is_empty(Object* list){ return list == Nil ? True : False; }
 
-Object* new_list1(Object* obj){
-    return cons(obj,Nil);
-}
+Object* new_list1(Object* obj){ return cons(obj,Nil); }
 
 Object* new_list2(Object* obj1,Object* obj2){
 	return cons(obj1,new_list1(obj2));
