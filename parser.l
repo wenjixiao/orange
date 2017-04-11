@@ -5,7 +5,7 @@
 #include "string.h"
 
 #include "util.h"
-#include "vm.h"
+#include "object.h"
 #include "interpreter.h"
 
 extern Object* Nil; // '()

@@ -1,4 +1,4 @@
-#include "vm.h"
+#include "object.h"
 
 void myprint(Object* obj,char* s);
 int string_to_int(char* s,int radix);

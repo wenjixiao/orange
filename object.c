@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "vm.h"
+#include "object.h"
 #include "gc.h"
 
-extern Object *Consts;
 extern Object *Nil,*True,*False;
 extern Object *Procedure;
 

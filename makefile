@@ -4,22 +4,22 @@ gc_lib = /home/wenjixiao/gc/lib
 ops = -g -std=gnu99
 
 #--------------------------------------
-interpreter : interpreter.o procedures.o parser.o vm.o util.o
+interpreter : interpreter.o procedures.o parser.o object.o util.o
 	gcc -o $@ $^ -L$(gc_lib) -lm -lgc -static
 
-interpreter.o : interpreter.c util.h vm.h parser.h
+interpreter.o : interpreter.c util.h object.h parser.h
 	gcc $(ops) -c $<
 
-procedures.o : procedures.c procedures.h vm.h
+procedures.o : procedures.c procedures.h object.h
 	gcc $(ops) -c $<
 
-vm.o : vm.c vm.h
+object.o : object.c object.h
 	gcc $(ops) -c $< -I$(gc_include)
 
 util.o : util.c util.h
 	gcc $(ops) -c $<
 
-parser.o : parser.c vm.h util.h interpreter.h
+parser.o : parser.c object.h util.h interpreter.h
 	gcc $(ops) -c $<
 
 parser.c : parser.l

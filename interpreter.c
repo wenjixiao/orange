@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "util.h"
-#include "vm.h"
+#include "object.h"
 #include "parser.h"
 #include "procedures.h"
 #include "interpreter.h"
@@ -27,8 +27,6 @@ Object* False;
 Object* Void;
 /* global list for gc */
 Object* Consts; // as a root for gc mark
-/* make a global stack */
-extern Stack* stack;
 /*
  * find or generate a symbol
  * maybe the symbol table should depends on env,
@@ -231,11 +229,7 @@ Object* get_definition_value(Object* obj){
 }
 
 Object* define_eval(Object* obj,Object* env){
-    push(stack,env);
-    push(stack,obj);
     Object* val = obj_eval(get_definition_value(obj),env);
-    pop(stack);
-    pop(stack);
     Object* var = get_definition_variable(obj);
     define_variable(var,val,env);
     return Void;
@@ -255,12 +249,7 @@ Object* get_if_alternative(Object* obj){
 
 Object* if_eval(Object* obj,Object* env){
     Object* result;
-
-    push(stack,obj);
-    push(stack,env);
     Object* predicate_obj = obj_eval(get_if_predicate(obj),env);
-    pop(stack);
-    pop(stack);
 
     if(predicate_obj->type == OBJ_BOOLEAN && predicate_obj->value.i == 0){
         //false
@@ -282,13 +271,11 @@ Object* list_of_values(Object* operands,Object* env){
 
     Object* pair = operands;
 
-    push(stack,args); // save
     while(pair != Nil){
         operand_obj = obj_eval(CAR(pair),env);
         args = append(args,operand_obj);
         pair = CDR(pair);
     }
-    pop(stack); //restore
     return args;
 }
 
@@ -320,12 +307,7 @@ Object* obj_eval(Object* obj,Object* env){
         return lookup_variable_value(obj,env);
     }else if(is_list_tagged(obj,Keywords[KWD_LAMBDA])){
         //lambda
-            push(stack,env);
-            push(stack,obj);
-            Object* myobj = make_procedure(get_lambda_params(obj),get_lambda_body(obj),env);
-            pop(stack);
-            pop(stack);
-            return myobj;
+            return make_procedure(get_lambda_params(obj),get_lambda_body(obj),env);
     }else if(is_list_tagged(obj,Keywords[KWD_IF])){
         //if
         return if_eval(obj,env);
@@ -349,16 +331,9 @@ Object* obj_eval(Object* obj,Object* env){
         exit(1);
     }else if(obj->type == OBJ_PAIR){
         //applications
-        push(stack,env);
-        push(stack,obj);
         Object* proc = obj_eval(get_operator(obj),env);
-        push(stack,proc);
         Object* args = list_of_values(get_operands(obj),env);
-        pop(stack);
-        pop(stack);
-        pop(stack);
-        Object* result = obj_apply(proc,args);
-        return result;
+        return obj_apply(proc,args);
     }else{
         perror("unknow expression type");
         exit(1);
@@ -397,33 +372,3 @@ Object* obj_apply(Object* procedure,Object* arguments){
         exit(1);
     }
 }
-
-/*
-Object* num(int i){
-    return newIntegerObject(i);
-}
-void test_print(){
-    Object* n1 = num(1);
-    Object* n2 = num(2);
-    Object* n3 = num(3);
-    Object* n4 = num(4);
-    Object* n5 = num(5);
-    Object* n6 = num(6);
-
-    Object* c12 = cons(n1,n2);
-    Object* c34 = cons(n3,n4);
-    Object* cc = cons(c12,c34);
-
-    Object* l1 = list4(n1,n2,n3,n4);
-    printf("---------------\n");
-    printObject(l1);
-    printf("\n");
-    printObject1(l1);
-    printf("\n");
-    printf("---------------\n");
-    printObject(cc);
-    printf("\n");
-    printObject1(cc);
-    printf("\n");
-}
-*/

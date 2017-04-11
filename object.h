@@ -1,5 +1,5 @@
-#ifndef VM_H
-#define VM_H
+#ifndef OBJECT_H
+#define OBJECT_H
 
 #define STACK_MAX 256
 
@@ -64,7 +64,6 @@ Object* new_integer(int i);
 Object* new_symbol(char* symname);
 Object* new_string(char* s);
 Object* new_primitive_procedure(Object* (*primitive)());
-
 
 Object* new_list1(Object* obj);
 Object* new_list2(Object* obj1,Object* obj2);

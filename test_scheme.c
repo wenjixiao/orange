@@ -6,11 +6,40 @@
 #include <ctype.h>
 #include <check.h>
 
+Object* num(int i){
+    return newIntegerObject(i);
+}
+
+void test_print(){
+    Object* n1 = num(1);
+    Object* n2 = num(2);
+    Object* n3 = num(3);
+    Object* n4 = num(4);
+    Object* n5 = num(5);
+    Object* n6 = num(6);
+
+    Object* c12 = cons(n1,n2);
+    Object* c34 = cons(n3,n4);
+    Object* cc = cons(c12,c34);
+
+    Object* l1 = list4(n1,n2,n3,n4);
+    printf("---------------\n");
+    printObject(l1);
+    printf("\n");
+    printObject1(l1);
+    printf("\n");
+    printf("---------------\n");
+    printObject(cc);
+    printf("\n");
+    printObject1(cc);
+    printf("\n");
+}
 
 START_TEST (test_add){
     //ck_assert_int_eq(3,5);
-    ck_assert_msg(3==5,"3==5?");
+    //ck_assert_msg(3==5,"3==5?");
     //fail_unless(3 == 2,"error,3!=2");
+	
 }
 END_TEST
 

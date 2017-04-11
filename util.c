@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <regex.h>
 
-#include "vm.h"
+#include "object.h"
 
 void myprint(Object* obj,char* s){
     printf("\n-------%s-------\n",s);

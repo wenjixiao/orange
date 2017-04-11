@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "util.h"
-#include "vm.h"
+#include "object.h"
 
 extern Object *Nil,*True,*False;
 
