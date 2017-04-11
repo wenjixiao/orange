@@ -37,6 +37,12 @@ Object* primitive_sub(Object* params){
 
     return new_integer(now);
 }
+/* * */
+Object* primitive_mul(Object* params){
+}
+/* / */
+Object* primitive_div(Object* params){
+}
 /* > */
 Object* primitive_gt(Object* params){
     Object* left_obj = CAR(params);

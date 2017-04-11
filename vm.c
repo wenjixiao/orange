@@ -87,7 +87,18 @@ void obj_print(Object* obj){
                 printf("%s","<#primitive>");
                 break;
             case OBJ_PAIR:
-                pair_print(obj,0);
+				/*
+				printf("(");
+				obj_print(CAR(obj));
+				printf(",");
+				obj_print(CDR(obj));
+				printf(")");
+				*/
+				if(CAR(obj) == Procedure){
+					printf("%s","<#procedure>");
+				}else{
+					pair_print(obj,0);
+				}
                 break;
         }
     }else{

@@ -211,7 +211,7 @@ Object* set_eval(Object* obj,Object* env){
 }
 
 Object* make_lambda(Object* parameters,Object* body){
-    return list3(Keywords[KWD_LAMBDA],parameters,body);
+	return cons(Keywords[KWD_LAMBDA],cons(parameters,body));
 }
 
 Object* get_definition_variable(Object* obj){
