@@ -242,33 +242,104 @@ func primitive_add(params OrangeObj) OrangeObj {
 
 //====================================
 const (
-	EOF     = -1
-	L_PAREN = 0
-	R_PAREN = 1
-	SYMBOL  = 2
-	QUOTE   = 3
-	INTEGER = 4
+	TOKEN_EOF = iota
+	L_PAREN
+	R_PAREN
+	SYMBOL
+	QUOTE      //'
+	QUASIQUOTE //`
+	DOT
+	STRING
+	COMMENT
+	UNQUOTED         //,
+	UNQUOTE_SPLICING //,@
+	INTEGER          //#e,#i,#b,#o,#d,#x
+	CHARACTOR        //#\a
+	BOOLEAN          //#t|#f
+	VECTOR           //#()
 )
 
-func read_token(reader *bufio.Reader) (c string, flag int) {
+func read_charactor(reader *bufio.Reader) (token string, token_type int) {
+	chars := []rune{}
+	chars = append(chars, 'a')
+	token = string(chars)
+	return
+}
+
+func read_string(reader *bufio.Reader) (token string, token_type int) {
+	return
+}
+
+func read_integer(reader *bufio.Reader) (token string, token_type int) {
+	return
+}
+
+func read_token(reader *bufio.Reader) (token string, token_type int) {
 	//sr := string.NewReader("(define myadd (lambda (a b) (+ a b)))")
-	t, size, err := reader.ReadRune()
+	t, _, err := reader.ReadRune()
 	if err == io.EOF {
 		err = nil
-		flag = -1
+		return "", TOKEN_EOF
 	} else if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("char=%c,size=%d\n", t, size)
+	//fmt.Printf("char=%c,size=%d\n", t, size)
 	switch t {
 	case '(':
-		return string(t), L_PAREN
+		token, token_type = string(t), L_PAREN
 	case ')':
-		return string(t), R_PAREN
+		token, token_type = string(t), R_PAREN
 	case '\'':
-		return string(t), QUOTE
+		token, token_type = string(t), QUOTE
+	case '`':
+		token, token_type = string(t), QUASIQUOTE
+	case '.':
+		token, token_type = string(t), DOT
+	case ';':
+		token, token_type = string(t), COMMENT
+	case '"':
+		err := reader.UnreadRune()
+		if err != nil {
+			log.Fatal("unread error")
+		}
+		return read_string(reader)
+	case ',':
+		t1, _, err := reader.ReadRune()
+		if err != nil {
+			log.Fatal("read rune error")
+		}
+		if t1 == '@' {
+			return string(",@"), UNQUOTE_SPLICING
+		} else {
+			err = reader.UnreadRune()
+			if err != nil {
+				log.Fatal("unread error")
+			}
+			return string(t), UNQUOTED
+		}
+	case '#':
+		t1, _, err := reader.ReadRune()
+		if err != nil {
+			log.Fatal("read rune error")
+		}
+		err = reader.UnreadRune()
+		if err != nil {
+			log.Fatal("unread error")
+		}
+		switch t1 {
+		case '\\':
+			//charactor
+			return read_charactor(reader)
+		case '(':
+			//vector
+			return string(t), VECTOR
+		case 'e', 'i', 'b', 'o', 'd', 'x':
+			//integer
+			return read_integer(reader)
+		}
+
 	}
-	return string(t), 2
+	return
 }
 
 /* lparen,rparen,symbol,number */
@@ -283,7 +354,8 @@ func read(file_name string) {
 		log.Fatal("open file error!")
 	}
 	reader := bufio.NewReader(fi)
-	read_token(reader)
+	token, token_type := read_token(reader)
+	fmt.Printf("token=%v,type=%v\n", token, token_type)
 	defer fi.Close()
 }
 
