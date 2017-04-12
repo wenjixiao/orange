@@ -1,6 +1,10 @@
 package main
 
 import "fmt"
+import "io"
+import "os"
+import "bufio"
+import "log"
 
 //====================================
 
@@ -170,10 +174,9 @@ func apply(procedure OrangePair, arguments OrangePair) OrangeObj {
 
 //====================================
 
-/* global values */
-var Nil OrangePair = OrangePair{}
-var Undefined OrangeUndefined = OrangeUndefined{}
-var Void OrangeVoid = OrangeVoid{}
+var Nil OrangePair = OrangePair{}                 /* empty list */
+var Undefined OrangeUndefined = OrangeUndefined{} /* unknow things */
+var Void OrangeVoid = OrangeVoid{}                /* nothing */
 
 //====================================
 
@@ -206,8 +209,6 @@ func cdddr(pair OrangeObj) OrangeObj { return cdr(cdr(cdr(pair))) }
 
 func cadddr(pair OrangeObj) OrangeObj { return car(cdr(cdr(cdr(pair)))) }
 
-//====================================
-
 func list(elements []OrangeObj) OrangePair {
 	len := len(elements)
 	if len == 0 {
@@ -235,14 +236,70 @@ func test_list1() {
 }
 
 //====================================
+func primitive_add(params OrangeObj) OrangeObj {
+	return OrangeInteger(0)
+}
+
+//====================================
+const (
+	EOF     = -1
+	L_PAREN = 0
+	R_PAREN = 1
+	SYMBOL  = 2
+	QUOTE   = 3
+	INTEGER = 4
+)
+
+func read_token(reader *bufio.Reader) (c string, flag int) {
+	//sr := string.NewReader("(define myadd (lambda (a b) (+ a b)))")
+	t, size, err := reader.ReadRune()
+	if err == io.EOF {
+		err = nil
+		flag = -1
+	} else if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("char=%c,size=%d\n", t, size)
+	switch t {
+	case '(':
+		return string(t), L_PAREN
+	case ')':
+		return string(t), R_PAREN
+	case '\'':
+		return string(t), QUOTE
+	}
+	return string(t), 2
+}
+
+/* lparen,rparen,symbol,number */
+func read(file_name string) {
+	//sr := string.NewReader("(define myadd (lambda (a b) (+ a b)))")
+	//symbol_first_1 := "a-zA-Z!$%&*/:<=>?^_~"
+	//symbol_next_ := "a-zA-Z!$%&*/:<=>?^_~0-9+-@"
+	//symbol := "+|-|..."
+	log.Println("----read file----")
+	fi, err := os.Open(file_name)
+	if err != nil {
+		log.Fatal("open file error!")
+	}
+	reader := bufio.NewReader(fi)
+	read_token(reader)
+	defer fi.Close()
+}
+
+//====================================
 
 func main() {
-	var left1 OrangeInteger = OrangeInteger(3)
-	car(left1)
-	var right1 OrangeInteger = 4
-	//var n9 OrangeInteger = 4
-	cell := cons(left1, cons(right1, Nil))
-	cell.Print()
-	fmt.Println()
-	test_list1()
+	/*
+		var myfunc OrangePrimitive = primitive_add
+		var left1 OrangeInteger = OrangeInteger(3)
+		var right1 OrangeInteger = 4
+		//var n9 OrangeInteger = 4
+		cell := cons(left1, cons(right1, Nil))
+		cell.Print()
+		fmt.Println()
+		test_list1()
+		myfunc(left1)
+	*/
+	read("example.scm")
 }
