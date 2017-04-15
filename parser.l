@@ -47,19 +47,64 @@ int check_stack_for_return(){
 vector              #\(
 quote               '
 quasiquote          `
-comma               ,
+unquoted            ,
 unquote_splicing    ,@
 dot                 \.
 lp                  \(
 rp                  \)
-character           #\\.
+character           #\\.|#\\space|#\\newline
 string              \"[^\"\\]*\"
-b_integer            ((#e|#i)?#b)|(#b(#e|#i)?)(\+|-)?[01]+
-o_integer            ((#e|#i)?#o)|(#o(#e|#i)?)(\+|-)?[0-7]+
-d_integer            ((#e|#i)?(#d)?)|((#d)?(#e|#i)?)(\+|-)?[0-9]+
-x_integer            ((#e|#i)?#x)|(#x(#e|#i)?)(\+|-)?[0-9a-fA-F]+
+digit2				[01]
+digit8				[0-7]
+digit10				[0-9]
+digit16				[0-9a-fA-F]
+radix2				#b
+radix8				#o
+radix10				(#d)?
+radix16				#x
+sign				(\+|-)?
+exactness			(#e|#i)?
+b_integer           ({exactness}#b)|(#b{exactness}){sign}{digit2}+
+o_integer           ({exactness}#o)|(#o{exactness}){sign}[digit8]+
+d_integer           ({exactness}(#d)?)|((#d)?{exactness}){sign}{digit10}+
+x_integer           ({exactness}#x)|(#x{exactness}){sign}{digit16}+
+prefix2				({radix2}{exactness})|({exactness}{radix2})
+prefix8				({radix8}{exactness})|({exactness}{radix8})
+prefix10			({radix10}{exactness})|({exactness}{radix10})
+prefix16			({radix16}{exactness})|({exactness}{radix16})
+complex2			{real2}|({real2}@{real2})|({real2}\+{ureal2}i)|({real2}-{ureal2}i)|({real2}\+i)|({real2}-i)|(\+{ureal2}i)|(-{ureal2}i)|(\+i)|(-i)
+complex8			{real8}|({real8}@{real8})|({real8}\+{ureal8}i)|({real8}-{ureal8}i)|({real8}\+i)|({real8}-i)|(\+{ureal8}i)|(-{ureal8}i)|(\+i)|(-i)
+complex10			{real10}|({real10}@{real10})|({real10}\+{ureal10}i)|({real10}-{ureal10}i)|({real10}\+i)|({real10}-i)|(\+{ureal10}i)|(-{ureal10}i)|(\+i)|(-i)
+complex16			{real16}|({real16}@{real16})|({real16}\+{ureal16}i)|({real16}-{ureal16}i)|({real16}\+i)|({real16}-i)|(\+{ureal16}i)|(-{ureal16}i)|(\+i)|(-i)
+uinteger2			{digit2}+#*			
+uinteger8			{digit8}+#*			
+uinteger10			{digit10}+#*			
+uinteger16			{digit16}+#*			
+exponent_marker		e|s|f|d|l
+suffix				({exponent_marker}{sign}{digit10}+)?
+decimal10			({uinteger10}{suffix})|(\.{digit10}+#*{suffix})|({digit10}+\.{digit10}*#*{suffix})|({digit10}+#+\.#*{suffix})
+ureal2				{uinteger2}|({uinteger2}\/{uinteger2})
+ureal8				{uinteger8}|({uinteger8}\/{uinteger8})
+ureal10				{uinteger10}|({uinteger10}\/{uinteger10})|{decimal10}
+ureal16				{uinteger16}|({uinteger16}\/{uinteger16})
+real2				{sign}{ureal2}
+real8				{sign}{ureal8}
+real10				{sign}{ureal10}
+real16				{sign}{ureal16}
+number2				{prefix2}{complex2}
+number8				{prefix8}{complex8}
+number10			{prefix10}{complex10}
+number16			{prefix16}{complex16}
+number				{number2}|{number8}|{number10}|{number16}
 boolean             #t|#f
-identifier          [a-zA-Z!$%&*/:<=>?^_~][a-zA-Z!$%&*/:<=>?^_~0-9+-@]*|\+|-|\.\.\.
+letter				[a-zA-Z]
+digit				[0-9]
+special_initial		!|\$|%|&|\*|\/|:|<|=|>|\?|\^|_|~
+initial				{letter}|{special_initial}
+special_subsequent	\+|-|\.|@
+subsequent			{initial}|{digit}|{special_subsequent}
+peculiar_identifier \+|-|\.\.\.
+identifier          {initial}{subsequent}*{peculiar_identifier}
 comment             ;.*
 whitespace          [ \n\t\r\v\f]+
 
@@ -98,8 +143,8 @@ whitespace          [ \n\t\r\v\f]+
     //printf("unquote_splicing: %s\n",yytext);
 }
 
-{comma} {
-    //printf("comma: %s\n",yytext);
+{unquoted} {
+    //printf("unquoted: %s\n",yytext);
 }
 
 {quasiquote} {
