@@ -21,6 +21,7 @@
 #define STR(obj)         obj->value.s
 
 typedef enum {
+	OBJ_NULL,
     OBJ_VOID,
     OBJ_INTEGER,
     OBJ_SYMBOL,

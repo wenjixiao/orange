@@ -53,9 +53,7 @@ Object* make_symbol(const char* symname){
 
 void init_consts(){
     /* basic objects */
-    Nil = new_object(OBJ_PAIR);
-    CAR(Nil) = NULL;
-    CDR(Nil) = NULL;
+    Nil = new_object(OBJ_NULL);
     True = new_object(OBJ_BOOLEAN);
     True->value.i = 1;
     False = new_object(OBJ_BOOLEAN);

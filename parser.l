@@ -104,7 +104,7 @@ initial				{letter}|{special_initial}
 special_subsequent	\+|-|\.|@
 subsequent			{initial}|{digit}|{special_subsequent}
 peculiar_identifier \+|-|\.\.\.
-identifier          {initial}{subsequent}*{peculiar_identifier}
+identifier          ({initial}{subsequent}*)|{peculiar_identifier}
 comment             ;.*
 whitespace          [ \n\t\r\v\f]+
 

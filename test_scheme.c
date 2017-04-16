@@ -6,8 +6,10 @@
 #include <ctype.h>
 #include <check.h>
 
+#include "object.h"
+
 Object* num(int i){
-    return newIntegerObject(i);
+    return new_integer(i);
 }
 
 void test_print(){
