@@ -9,7 +9,7 @@
 #include "interpreter.h"
 #include "hashtable.h"
 
-#define M 977
+#define M 97
 
 enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 

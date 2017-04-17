@@ -13,6 +13,7 @@ extern Object *Nil; // '()
 extern Object *True;
 extern Object *False;
 extern Object *Lparen;
+
 extern HashTable *Symbols;
 
 static Object *obj;
