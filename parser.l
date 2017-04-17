@@ -7,17 +7,19 @@
 #include "util.h"
 #include "object.h"
 #include "interpreter.h"
+#include "hashtable.h"
 
-extern Object* Nil; // '()
-extern Object* True;
-extern Object* False;
-extern Object* Lparen;
+extern Object *Nil; // '()
+extern Object *True;
+extern Object *False;
+extern Object *Lparen;
+extern HashTable *Symbols;
 
-static Object* obj;
-static Object* parent; // the list readed in
-static Object* out_obj;
+static Object *obj;
+static Object *parent; // the list readed in
+static Object *out_obj;
 
-Stack* stack;
+Stack *stack;
 
 FILE *f;
 int Work_model;
@@ -282,6 +284,7 @@ int main(int argc,char** argv){
     stack = make_stack();
     init_consts();
     obj_read(f);
+	hashtable_print(Symbols);
     fclose(f);
     return 0;
 }

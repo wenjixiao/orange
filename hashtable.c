@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "gc.h"
 #include "hashtable.h"
-#define M 3
+#include "gc.h"
 
 /*
  * 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47
@@ -43,46 +42,51 @@ HashTable *hashtable_init(unsigned size){
 static Bucket *_get_bucket(HashTable *ht,char *key){
     unsigned h = BKDRHash(key,ht->size);
     //printf("key=%s,h=%u\n",key,h);
-    return ht->head+h*sizeof(Bucket);
+    return ht->head+h;
 }
 
-void hashtable_put(HashTable *ht,char* key,int value){
+void hashtable_put(HashTable *ht,char* key,Object *obj){
     Bucket *p = _get_bucket(ht,key);
     if(p->key != NULL){
         //collision
-        printf("#insert collision\n");
+        //printf("#insert collision\n");
         Bucket *q = p;
         while(q->next != NULL){
             q = q->next;
         }
         if(q->next == NULL){
             Bucket *new_bucket = (Bucket *) GC_MALLOC(sizeof(Bucket));
-            new_bucket->key = key;
-            new_bucket->value = value;
+			//new_bucket->key = (char *) GC_MALLOC(strlen(key)+1);
+			//strcpy(new_bucket->key,key);
+			new_bucket->key = key;
+            new_bucket->obj = obj;
             new_bucket->next = NULL;
             q->next = new_bucket;
             ht->used++;
         }
     }else{
         //the bucket is empty now
-        printf("#insert\n");
+        //printf("#insert\n");
+		//p->key = (char *) GC_MALLOC(strlen(key)+1);
+		//strcpy(p->key,key);
         p->key = key;
-        p->value = value;
+        p->obj = obj;
         p->next = NULL;
         ht->used++;
     }
 }
 /* return a pointer to any type,you should change type from void* */
-int hashtable_get(HashTable *ht,char* key){
+Object *hashtable_get(HashTable *ht,char* key){
     Bucket *p = _get_bucket(ht,key);
+	//printf("\np->key-----%s\n",p->key);
     if(p->key != NULL){
         if(p->next == NULL){
-            return p->value;
+            return p->obj;
         }else{
             //collision
             do{
                 if(strcmp(p->key,key)==0){
-                    return p->value;
+                    return p->obj;
                 }
                 p = p->next;
             }while(p != NULL);
@@ -96,7 +100,7 @@ void hashtable_delete(HashTable *ht,char* key){
     if(p->key != NULL){
         if(p->next == NULL){
             //no collision,just one
-            p->key = NULL,p->value = 0;
+            p->key = NULL,p->obj = NULL;
         }else{
             //it's a list
             if(strcmp(p->key,key)==0){
@@ -104,7 +108,7 @@ void hashtable_delete(HashTable *ht,char* key){
                 //here,p->next is not NULL!
                 Bucket *q = p->next;
                 p->key = q->key;
-                p->value = q->value;
+                p->obj = q->obj;
                 p->next = q->next;
                 ht->used--;
                 //free(q);
@@ -133,22 +137,22 @@ void hashtable_print(HashTable *ht){
     unsigned i;
     Bucket *p,*q;
     for(i=0;i<ht->size;i++){
-        p = ht->head + i*sizeof(Bucket);
+        p = ht->head + i;
         if(p->key != NULL){
-            printf("index=%u: %s=>%d",i,p->key,p->value);
+            printf("index=%u: %s=>",i,p->key);
+			obj_print(p->obj);
             q = p->next;
             while(q != NULL){
                 printf("|");
-                printf("%s=>%d",q->key,q->value);
+                printf("%s=>",q->key);
+				obj_print(q->obj);
                 q = q->next;
             }
             printf("\n");
-        }else{
-            printf("key is NULL!\n");
         }
     }
 }
-
+/*
 void hashtable_test(){
     HashTable *ht = hashtable_init(M);
 
@@ -167,8 +171,11 @@ void hashtable_test(){
     hashtable_delete(ht,"i");
     hashtable_print(ht);
 }
+*/
 //===============================================
+/*
 int main(){
     hashtable_test();
     return 0;
 }
+*/

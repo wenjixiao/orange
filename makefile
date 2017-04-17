@@ -4,16 +4,19 @@ gc_lib = /home/wenjixiao/gc/lib
 ops = -g -std=gnu99
 
 #--------------------------------------
-interpreter : interpreter.o procedures.o parser.o object.o util.o
+interpreter : interpreter.o procedures.o parser.o object.o util.o hashtable.o
 	gcc -o $@ $^ -L$(gc_lib) -lm -lgc -static
 
-interpreter.o : interpreter.c util.h object.h parser.h
+interpreter.o : interpreter.c util.h object.h parser.h hashtable.h
 	gcc $(ops) -c $<
 
 procedures.o : procedures.c procedures.h object.h
 	gcc $(ops) -c $<
 
 object.o : object.c object.h
+	gcc $(ops) -c $< -I$(gc_include)
+
+hashtable.o : hashtable.c hashtable.h
 	gcc $(ops) -c $< -I$(gc_include)
 
 util.o : util.c util.h object.h
@@ -31,12 +34,6 @@ run: interpreter
 clean:
 	rm *.o
 	rm interpreter
-#--------------------------------------
-hashtable : hashtable.o 
-	gcc -o $@ $^ -L$(gc_lib) -lgc
-
-hashtable.o : hashtable.c hashtable.h
-	gcc $(ops) -c $< -I$(gc_include)
 #--------------------------------------
 test : test_scheme.o
 	gcc -o $@ $^ -lcheck -lm -lpthread -lrt

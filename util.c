@@ -171,7 +171,7 @@ int string_to_int(char* s,int radix){
 }
 
 char *heap_string(const char *s){
-    char *str = (char *)malloc(strlen(s)+1);
+    char *str = (char *) GC_MALLOC(strlen(s)+1);
     strcpy(str,s);
     return str;
 }

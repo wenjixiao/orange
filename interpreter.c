@@ -7,48 +7,38 @@
 #include "parser.h"
 #include "procedures.h"
 #include "interpreter.h"
+#include "hashtable.h"
+
+#define M 977
 
 enum {KWD_QUOTE,KWD_SET,KWD_DEFINE,KWD_IF,KWD_LAMBDA,KWD_BEGIN,KWD_COND,NUM_KEYWORDS};
 
-const char* Keyword_names[] = {"quote","set!","define","if","lambda","begin","cond"};
+char* Keyword_names[] = {"quote","set!","define","if","lambda","begin","cond"};
 
 Object* Keywords[NUM_KEYWORDS]; // keyword symbol in vm
 
 /* global symbols */
-Object* Symbols; /* global symbol table */
-Object* Primitive; //symbol object for primitive procedure
-Object* Procedure;
-Object* Lparen;
-Object* Rparen;
+HashTable *Symbols; /* global symbol table */
+Object *Primitive; //symbol object for primitive procedure
+Object *Procedure;
+Object *Lparen;
+Object *Rparen;
 /* global consts */
-Object* Nil; // '()
-Object* True;
-Object* False;
-Object* Void;
-/* global list for gc */
-Object* Consts; // as a root for gc mark
-/*
- * find or generate a symbol
- * maybe the symbol table should depends on env,
- * and different scope have different symtable
- * i don't know now
- */
-Object* make_symbol(const char* symname){
-    Object* obj;
-    Object* pair = Symbols;
-    if(Symbols != Nil){
-        while(pair != Nil){
-            obj= CAR(pair);
-            if(strcmp(obj->value.s,symname) == 0){
-                return obj;
-            }
-            pair=CDR(pair);
-        }
-    }
-    //not found 
-    Object* newObj = new_symbol(heap_string(symname));
-    Symbols = append(Symbols,newObj);
-    return newObj;
+Object *Nil; // '()
+Object *True;
+Object *False;
+Object *Void;
+
+/* have,return;not have,create and put in then return it */
+Object* make_symbol(char *symname){
+	//printf("want make symbol ==%s==\n",symname);
+	Object *obj;
+	if((obj = hashtable_get(Symbols,symname)) !=  NULL){
+		return obj;
+	}
+	obj = new_symbol(symname);
+	hashtable_put(Symbols,symname,obj);
+	return obj;
 }
 
 void init_consts(){
@@ -60,18 +50,16 @@ void init_consts(){
     False->value.i = 0;
     Void = new_object(OBJ_VOID);
     /* symbols */
-    Symbols = Nil;
+    Symbols = hashtable_init(M);
     for(int i=0;i<NUM_KEYWORDS;i++){
+		//printf("\n--%d--\n",Keyword_names[i]);
         Keywords[i] = make_symbol(Keyword_names[i]);
+		//obj_print(Keywords[i]);
     }
     Primitive = make_symbol("primitive");
     Procedure = make_symbol("procedure");
     Lparen = make_symbol("(");
     Rparen = make_symbol(")");
-    /* add them to global_const_list */
-    Consts = Nil;
-    Consts = new_list4(Nil,True,False,Void);
-    Consts = cons(Symbols,Consts);
 }
 /* env is a list of frame.
  * Frame is a pair,not list */
@@ -180,6 +168,8 @@ Object* init_env(){
     add_primitive_procedure(frame,"+",primitive_add);
     add_primitive_procedure(frame,"-",primitive_sub);
     add_primitive_procedure(frame,">",primitive_gt);
+
+	hashtable_print(Symbols);
 
     return cons(frame,Nil);
 }

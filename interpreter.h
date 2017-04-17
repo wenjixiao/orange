@@ -3,7 +3,7 @@
 
 void init_consts();
 Object* init_env();
-Object* make_symbol(const char* symname);
+Object* make_symbol(char* symname);
 Object* obj_eval(Object* obj,Object* env);
 
 #endif
